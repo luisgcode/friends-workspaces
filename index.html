@@ -1662,19 +1662,6 @@ function startAct(p, name, t, dur, target, extra){
 }
 function say(p, text, secs){ p.say = { text:text, until:clock.elapsedTime + (secs || 3) }; }
 var chats = [];
-function startChat(a, b, t, dur, lines){
-  var talky = !chats.some(function(c){ return c.bubbles; }) && (lines ? true : Math.random() < 0.7);
-  var first = Math.random() < 0.4 ? "Hey " + b.name + "! " + choose(["How's it going?","Got a sec?","Look who's here."]) : choose(LINES[a.id]);
-  chats.push({ a:a, b:b, t0:t, dur:dur, bubbles:talky, lines:lines || [first, choose(LINES[b.id])] });
-  if (b.id === "luis" && luisDeepWork(b)) moodShift(b, -0.12, "I got pulled out of the zone");
-  else moodShift(b, 0.08, "I just had a good chat with " + a.name);
-  moodShift(a, 0.08, "I just had a good chat with " + b.name);
-  bumpCare(a.care, "mood", 0.04); bumpCare(b.care, "mood", 0.03);
-  a.lastEvent = { kind:"chat", with:b.name, t:t }; b.lastEvent = { kind:"chat", with:a.name, t:t };
-  a.chatWith = b; b.chatWith = a;
-  a.needs.social = Math.max(0, a.needs.social - 0.7); b.needs.social = Math.max(0, b.needs.social - 0.6);
-  b.needs.focus *= 0.7;
-}
 function updateChats(t){
   for (var i = chats.length - 1; i >= 0; i--) {
     var c = chats[i], u = t - c.t0;
@@ -4220,7 +4207,7 @@ var clock = new T.Clock();
 window.__ow = {
   people:BY, focus:function(id){ focusOn(BY[id]); }, zoom:function(r, th){ goal.r = r; if (th !== undefined) goal.th = th; lastInteract = performance.now() / 1000 + 999; }, ask:function(id, q){ return converse(BY[id], q).text; }, say:function(id, q){ ask(BY[id], q); },
   care:function(id, kind, item){ return giveCare(BY[id], kind, item).text; },
-  text:function(a, b){ sendText(BY[a], BY[b], clock.elapsedTime); }, act:function(id, n, d){ startAct(BY[id], n, clock.elapsedTime, d || 8, null, { label:"Test" }); },
+  text:function(a, b){ sendText(BY[a], BY[b], clock.elapsedTime); }, act:function(id, n, d){ startAct(BY[id], n, clock.elapsedTime, d || 8, null, { label:"Prueba" }); },
   errand:function(id, i){ var p = BY[id], e = ERRANDS[id][i]; goTrip(p, clock.elapsedTime, "errand", buildPath(p.id, p.seat, p.seatVia, e.spot, e.via || [])); p.trip.errand = e; },
   perf:function(){ return PERF; },
   stats:function(){ return { calls:renderer.info.render.calls, triangles:renderer.info.render.triangles, geometries:renderer.info.memory.geometries, textures:renderer.info.memory.textures, fps:+quality.fps.toFixed(1), frameMs:+quality.ms.toFixed(2), quality:quality.level, dpr:renderer.getPixelRatio() }; },
