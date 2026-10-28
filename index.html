@@ -64,7 +64,7 @@ button:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 #stage{position:relative;flex:1;min-height:0;overflow:hidden;background:var(--scene-bg)}
 #stage canvas{display:block;width:100%;height:100%;touch-action:none;cursor:grab}
 #stage.dragging canvas{cursor:grabbing}
-#labels{position:absolute;inset:0;pointer-events:none;overflow:hidden}
+#labels{position:absolute;inset:0;pointer-events:none;overflow:hidden;z-index:1}
 .tag{position:absolute;left:0;top:0;pointer-events:auto;cursor:pointer;border:0;margin:0;display:flex;flex-direction:column;align-items:flex-start;gap:1px;
   padding:3px 8px 4px;border-radius:8px;background:var(--tag-bg);color:var(--tag-ink);font:inherit;text-align:left;white-space:nowrap;
   box-shadow:0 4px 14px rgba(15,20,25,.16);will-change:transform;transition:opacity .2s}
@@ -86,6 +86,11 @@ button:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 .btn{display:inline-flex;align-items:center;gap:8px;padding:9px 14px;border-radius:10px;border:1px solid var(--line);background:var(--surface);color:var(--ink);font:600 13px/1 var(--f-body);cursor:pointer;box-shadow:var(--shadow)}
 .btn:hover{border-color:var(--muted)}
 .btn svg{width:15px;height:15px}
+.vtile{position:absolute;right:max(16px, env(safe-area-inset-right, 0px));top:64px;width:220px;height:270px;border-radius:14px;box-shadow:0 0 0 2px var(--surface),0 12px 30px rgba(0,0,0,.28);pointer-events:none;z-index:2;overflow:hidden}
+.vtile .live{position:absolute;left:10px;top:10px;padding:3px 7px;border-radius:6px;background:#d9534f;color:#fff;font:700 10px/1 var(--f-body);letter-spacing:.08em}
+.vtile .vt-n{position:absolute;left:0;right:0;bottom:0;padding:16px 10px 8px;color:#fff;font:600 12px/1.2 var(--f-body);background:linear-gradient(to top,rgba(0,0,0,.6),rgba(0,0,0,0))}
+.ping{position:absolute;left:0;top:0;font-size:20px;line-height:1;pointer-events:none;filter:drop-shadow(0 3px 6px rgba(0,0,0,.25));will-change:transform}
+@media (max-width:640px){ .vtile{width:112px;height:140px;top:auto} .vtile .vt-n{font-size:10px;padding:12px 6px 5px} .vtile .live{left:6px;top:6px} }
 .hint{position:absolute;right:max(16px, env(safe-area-inset-right, 0px));bottom:max(14px, env(safe-area-inset-bottom, 0px));margin:0;padding:7px 12px;border-radius:999px;background:rgba(27,29,34,.68);color:#fff;font-size:12px;pointer-events:none;z-index:1}
 .vignette{position:absolute;inset:0;pointer-events:none;background:radial-gradient(ellipse at 50% 45%,rgba(0,0,0,0) 62%,rgba(20,24,30,.14) 100%);z-index:0}
 
@@ -163,7 +168,7 @@ button:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
     <div class="mark" aria-hidden="true"><i style="background:#7b5ea7"></i><i style="background:#2a8fb0"></i><i style="background:#b5452f"></i><i style="background:#3c5a78"></i></div>
     <div>
       <h1>Our Workspaces</h1>
-      <p class="sub">Four friends, four rooms, one hallway</p>
+      <p class="sub">Four friends, four workplaces, one group chat</p>
     </div>
   </div>
   <nav class="chips" id="chips" aria-label="People"></nav>
@@ -215,6 +220,7 @@ button:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
   </section>
   <p class="hint" id="hint">Drag to rotate. Tap anyone to chat or bring them a snack.</p>
   <div class="vignette" aria-hidden="true"></div>
+  <div class="vtile" id="vtile" hidden aria-hidden="true"><span class="live">LIVE</span><span class="vt-n" id="vtName"></span></div>
   <div id="loading"><span class="spin"></span>Opening the workspaces&hellip;</div>
   <div id="fallback" hidden>This page needs WebGL. Try a recent version of Chrome, Edge, Safari or Firefox.</div>
 </main>
@@ -258,17 +264,17 @@ var PEOPLE = [
   { id:"angeles", name:"Angeles", role:"Customer service", place:"Customer care desk", pron:"she",
     personality:"Calm, patient and upbeat. The voice that turns a bad day around.",
     topics:"Handling calls, tickets, difficult customers, staying calm and support tools",
-    shirt:"#2a8fb0", pants:"#23262d", shoes:"#1c1d22", skin:"#d9a47e", hair:"#16110f", style:"long", sleeves:true, collar:"#2a8fb0", headset:true,
+    shirt:"#2a8fb0", pants:"#23262d", shoes:"#1c1d22", skin:"#c99572", hair:"#16110f", style:"long", sleeves:true, collar:"#2a8fb0", headset:true,
     status:"On a call with a customer" },
   { id:"john", name:"John", role:"Cabinet maker", place:"Woodworking workshop", pron:"he",
     personality:"Steady, practical and proud of a clean joint. Measures twice, always.",
     topics:"Wood types, joinery, finishes, tools, kitchen cabinets and shop safety",
-    shirt:"#a8432f", plaid:true, pants:"#3d5573", shoes:"#5a3a22", skin:"#e6bc98", hair:"#5a3d26", style:"short", beard:true, sleeves:true, rolled:true, apron:"#7a5634", collar:"#a8432f", stand:true,
+    shirt:"#a8432f", plaid:true, pants:"#3d5573", shoes:"#5a3a22", skin:"#e6bc98", hair:"#5a3d26", style:"short", beard:true, sleeves:true, rolled:true, apron:"#7a5634", collar:"#a8432f", stand:true, cap:"#2f4a66",
     status:"Planing a board at the bench" },
   { id:"luis", name:"Luis", role:"Web manager", place:"Web studio", pron:"he",
     personality:"Headphones on, building the web. Likes clean pages and fast loads.",
     topics:"Websites, product pages, SEO basics, images, accessibility and page speed",
-    shirt:"#3c5a78", pants:"#2a2e35", shoes:"#f1f1ef", skin:"#d9a57c", hair:"#0c0c0e", style:"short", sleeves:false, collar:"#3c5a78", headphones:true,
+    shirt:"#3c5a78", pants:"#2a2e35", shoes:"#f1f1ef", skin:"#b98a68", hair:"#0c0c0e", style:"short", sleeves:false, collar:"#3c5a78", headphones:true,
     status:"Headphones on, building pages" }
 ];
 var BY = {}; PEOPLE.forEach(function(p, i){ BY[p.id] = p; p.idx = i; });
@@ -278,7 +284,7 @@ var renderer;
 try { renderer = new T.WebGLRenderer({ antialias:true, powerPreference:"high-performance" }); }
 catch (e) { fail("This page needs WebGL. Try a recent version of Chrome, Edge, Safari or Firefox."); return; }
 var isSmall = Math.min(window.innerWidth, window.innerHeight) < 700;
-var DPR_MAX = isSmall ? 1.25 : 1.5;
+var DPR_MAX = isSmall ? 1.75 : 2;
 renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, DPR_MAX));
 renderer.shadowMap.enabled = true;
 renderer.shadowMap.type = T.PCFSoftShadowMap;
@@ -309,7 +315,7 @@ sun.castShadow = true;
 var SHADOW = isSmall ? 1024 : 2048;
 sun.shadow.mapSize.set(SHADOW, SHADOW);
 var sc = sun.shadow.camera;
-sc.left = -11.5; sc.right = 11.5; sc.top = 11.5; sc.bottom = -11.5; sc.near = 4; sc.far = 50;
+sc.left = -8; sc.right = 8; sc.top = 8; sc.bottom = -8; sc.near = 4; sc.far = 50;
 sun.shadow.bias = -0.0004; sun.shadow.normalBias = 0.03; sun.shadow.radius = 3;
 scene.add(sun, sun.target);
 var fillL = new T.DirectionalLight(0xdce7ff, 0.25);
@@ -331,15 +337,16 @@ var G = {
   box: new T.BoxGeometry(1,1,1),
   sph: new T.SphereGeometry(1, 20, 14),
   lowSph: new T.SphereGeometry(1, 10, 8),
-  hsph: new T.SphereGeometry(1, 28, 20),
-  hcap2: new T.SphereGeometry(1, 28, 14, 0, Math.PI * 2, 0, Math.PI * 0.53),
+  hsph: new T.SphereGeometry(1, 20, 14),
+  hcap2: new T.SphereGeometry(1, 22, 10, 0, Math.PI * 2, 0, Math.PI * 0.53),
   cyl: new T.CylinderGeometry(1,1,1,18),
   cyl8: new T.CylinderGeometry(1,1,1,8),
   plane: new T.PlaneGeometry(1,1),
   band3: new T.TorusGeometry(0.102, 0.011, 8, 28, Math.PI),
   collar: new T.TorusGeometry(1, 0.22, 8, 24, Math.PI * 1.25),
   ring: new T.TorusGeometry(1, 0.1, 6, 20),
-  wedge: new T.CylinderGeometry(1, 1, 1, 12, 1, false, 0, 0.62)
+  wedge: new T.CylinderGeometry(1, 1, 1, 12, 1, false, 0, 0.62),
+  mouthArc: new T.TorusGeometry(0.017, 0.0035, 6, 14, Math.PI)
 };
 var matCache = {};
 function M(color, o){
@@ -355,7 +362,7 @@ function add(geo, mat, sx, sy, sz, x, y, z, parent, shadow){
   m.position.set(x, y, z);
   m.castShadow = shadow !== false;
   m.receiveShadow = true;
-  (parent || STATIC).add(m);
+  (parent || CUR).add(m);
   return m;
 }
 function canvasTex(w, h, draw){
@@ -380,7 +387,7 @@ function panel(mat, w, h, x, y, z, rotY, parent){
   var m = new T.Mesh(G.plane, mat);
   m.scale.set(w, h, 1); m.position.set(x, y, z); m.rotation.y = rotY || 0;
   m.receiveShadow = true;
-  (parent || STATIC).add(m);
+  (parent || CUR).add(m);
   return m;
 }
 function noiseFill(g, w, h, base, amt, n, seed){
@@ -390,31 +397,26 @@ function noiseFill(g, w, h, base, amt, n, seed){
 }
 
 /* ---------- world layout ----------
-   Four rooms in a 2x2 grid, each 6 x 6 m, around a cross-shaped corridor 2.4 m wide.
-   Rooms: John workshop (-x,-z), Doriana back office (+x,-z), Angeles customer care (-x,+z), Luis web studio (+x,+z).
-   Tall walls only on the far sides (x = -7.25 and z = -7.25); every other wall is low so the camera sees in. */
-var LOW = 0.82, TALL = 2.75, TH = 0.14, E = 7.25, IN = 1.2;
+   One square building split into four quadrants by a low cross-shaped wall. Each quadrant is 4.8 x 4.8 m.
+   John workshop (-x,-z), Doriana back office (+x,-z), Angeles customer care (-x,+z), Luis web studio (+x,+z).
+   Tall walls only on the far sides (x = -E and z = -E); the cross and the near walls stay low so the camera sees everyone.
+   Each room is built in local coordinates around its centre: its far walls are at -W and its near walls at +W. */
+var LOW = 0.82, MID = 1.0, TALL = 2.75, TH = 0.14, E = 4.95, NC = 2.5, W = 2.4;
 var ROOMS = {
-  john:   { cx:-4.2, cz:-4.2, wall:"#e8d9c4", tall:"#d8c3a5", floor:"concrete" },
-  doriana:{ cx: 4.2, cz:-4.2, wall:"#efe4d4", tall:"#e4d3bb", floor:"carpetWarm" },
-  angeles:{ cx:-4.2, cz: 4.2, wall:"#dfe8f0", tall:"#2f4b6e", floor:"carpetTiles" },
-  luis:   { cx: 4.2, cz: 4.2, wall:"#e6e8ec", tall:"#d9dde3", floor:"wood" }
+  john:   { cx:-NC, cz:-NC, wall:"#e8d9c4", tall:"#d8c3a5", floor:"concrete" },
+  doriana:{ cx: NC, cz:-NC, wall:"#efe4d4", tall:"#e4d3bb", floor:"carpetWarm" },
+  angeles:{ cx:-NC, cz: NC, wall:"#dfe8f0", tall:"#2f4b6e", floor:"carpetTiles" },
+  luis:   { cx: NC, cz: NC, wall:"#e6e8ec", tall:"#d9dde3", floor:"wood" }
 };
-
-/* floor textures, one per room plus the corridor tiles */
+/* floor textures, one per room */
 var FLOORTEX = {
-  corridor: canvasTex(256, 256, function(g, w, h){
-    noiseFill(g, w, h, "#e7e2d8", 0.05, 900, 3);
-    g.strokeStyle = "rgba(120,105,85,0.28)"; g.lineWidth = 2;
-    for (var i = 0; i <= 4; i++) { g.beginPath(); g.moveTo(i * w / 4, 0); g.lineTo(i * w / 4, h); g.stroke(); g.beginPath(); g.moveTo(0, i * h / 4); g.lineTo(w, i * h / 4); g.stroke(); }
-  }),
   concrete: canvasTex(512, 512, function(g, w, h){
-    noiseFill(g, w, h, "#b9b2a6", 0.09, 5000, 11);
+    noiseFill(g, w, h, "#b3ab9e", 0.09, 5000, 11);
     var r = seeded(23);
     for (var i = 0; i < 26; i++) {
       var x = r() * w, y = r() * h, rad = 20 + r() * 70;
       var gr = g.createRadialGradient(x, y, 2, x, y, rad);
-      gr.addColorStop(0, "rgba(232,205,160,0.55)"); gr.addColorStop(1, "rgba(232,205,160,0)");
+      gr.addColorStop(0, "rgba(232,205,160,0.5)"); gr.addColorStop(1, "rgba(232,205,160,0)");
       g.fillStyle = gr; g.fillRect(x - rad, y - rad, rad * 2, rad * 2);
     }
     g.strokeStyle = "rgba(80,70,60,0.25)"; g.lineWidth = 2;
@@ -422,9 +424,7 @@ var FLOORTEX = {
   }),
   carpetWarm: canvasTex(256, 256, function(g, w, h){ noiseFill(g, w, h, "#8a6f5c", 0.12, 7000, 5); }),
   carpetTiles: canvasTex(256, 256, function(g, w, h){
-    for (var i = 0; i < 4; i++) for (var j = 0; j < 4; j++) {
-      g.fillStyle = (i + j) % 2 ? "#5d7590" : "#667f9a"; g.fillRect(i * 64, j * 64, 64, 64);
-    }
+    for (var i = 0; i < 4; i++) for (var j = 0; j < 4; j++) { g.fillStyle = (i + j) % 2 ? "#5d7590" : "#667f9a"; g.fillRect(i * 64, j * 64, 64, 64); }
     var r = seeded(9);
     for (var k = 0; k < 6000; k++) { g.fillStyle = "rgba(255,255,255," + (r() * 0.06).toFixed(3) + ")"; g.fillRect(r() * w, r() * h, 1, 1); }
   }),
@@ -434,7 +434,7 @@ var FLOORTEX = {
       var y = -r() * h * 0.6;
       while (y < h) {
         var len = h * (0.35 + r() * 0.4);
-        g.fillStyle = "hsl(" + (29 + r() * 7).toFixed(1) + "," + (36 + r() * 12).toFixed(1) + "%," + (66 + r() * 9).toFixed(1) + "%)";
+        g.fillStyle = "hsl(" + (28 + r() * 7).toFixed(1) + "," + (38 + r() * 12).toFixed(1) + "%," + (58 + r() * 9).toFixed(1) + "%)";
         g.fillRect(i * pw, y, pw, len);
         g.fillStyle = "rgba(95,62,35,0.32)"; g.fillRect(i * pw, y, pw, 2);
         y += len;
@@ -443,49 +443,44 @@ var FLOORTEX = {
     }
   })
 };
-FLOORTEX.corridor.wrapS = FLOORTEX.corridor.wrapT = T.RepeatWrapping; FLOORTEX.corridor.repeat.set(4, 4);
-["concrete","carpetWarm","carpetTiles","wood"].forEach(function(k){ FLOORTEX[k].wrapS = FLOORTEX[k].wrapT = T.RepeatWrapping; FLOORTEX[k].repeat.set(k === "carpetTiles" ? 3 : 1.5, k === "carpetTiles" ? 3 : 1.5); });
-
-var slab = add(G.box, M("#d6d2ca", { roughness:0.9 }), 15.2, 0.3, 15.2, 0, -0.151, 0, STATIC, false);
-var corridorFloor = new T.Mesh(G.plane, texMat(FLOORTEX.corridor, { roughness:0.6 }));
-corridorFloor.rotation.x = -Math.PI / 2; corridorFloor.scale.set(14.5, 14.5, 1); corridorFloor.receiveShadow = true; STATIC.add(corridorFloor);
+["concrete","carpetWarm","carpetTiles","wood"].forEach(function(k){ FLOORTEX[k].wrapS = FLOORTEX[k].wrapT = T.RepeatWrapping; var rp = k === "carpetTiles" ? 2.4 : 1.2; FLOORTEX[k].repeat.set(rp, rp); });
+add(G.box, M("#d6d2ca", { roughness:0.9 }), 2 * E + 0.4, 0.3, 2 * E + 0.4, 0, -0.151, 0, STATIC, false);
 Object.keys(ROOMS).forEach(function(k){
   var R = ROOMS[k];
   var f = new T.Mesh(G.plane, texMat(FLOORTEX[R.floor], { roughness:R.floor === "wood" ? 0.5 : 0.92 }));
-  f.rotation.x = -Math.PI / 2; f.scale.set(6.0, 6.0, 1); f.position.set(R.cx, 0.004, R.cz); f.receiveShadow = true;
+  f.rotation.x = -Math.PI / 2; f.scale.set(E, E, 1); f.position.set(R.cx, 0.004, R.cz); f.receiveShadow = true;
   STATIC.add(f);
 });
-
-/* walls: axis aligned segments, low ones get a cap */
-function wallSeg(x1, z1, x2, z2, h, color){
+/* walls: axis aligned segments; low ones get a cap. A two-sided wall shows each room's own colour on its own side. */
+var capMat = M("#f4f2ee", { roughness:0.7 });
+function wallSeg(x1, z1, x2, z2, h, color, color2){
   var alongX = Math.abs(x2 - x1) > Math.abs(z2 - z1), L = alongX ? Math.abs(x2 - x1) : Math.abs(z2 - z1);
-  var mat = M(color, { roughness:0.93 });
-  add(G.box, mat, alongX ? L : TH, h, alongX ? TH : L, (x1 + x2) / 2, h / 2, (z1 + z2) / 2);
-  if (h < 1.5) add(G.box, M("#f4f2ee", { roughness:0.7 }), alongX ? L + 0.02 : TH + 0.06, 0.04, alongX ? TH + 0.06 : L + 0.02, (x1 + x2) / 2, h + 0.02, (z1 + z2) / 2, STATIC, false);
+  var cx = (x1 + x2) / 2, cz = (z1 + z2) / 2;
+  if (color2) {
+    add(G.box, M(color, { roughness:0.93 }), alongX ? L : TH / 2, h, alongX ? TH / 2 : L, cx - (alongX ? 0 : TH / 4), h / 2, cz - (alongX ? TH / 4 : 0), STATIC);
+    add(G.box, M(color2, { roughness:0.93 }), alongX ? L : TH / 2, h, alongX ? TH / 2 : L, cx + (alongX ? 0 : TH / 4), h / 2, cz + (alongX ? TH / 4 : 0), STATIC);
+  } else add(G.box, M(color, { roughness:0.93 }), alongX ? L : TH, h, alongX ? TH : L, cx, h / 2, cz, STATIC);
+  if (h < 1.5) add(G.box, capMat, alongX ? L + 0.02 : TH + 0.05, 0.04, alongX ? TH + 0.05 : L + 0.02, cx, h + 0.02, cz, STATIC, false);
 }
-var DOOR = 0.7;
-/* tall back walls (left and far) */
-wallSeg(-E - 0.07, -E, 1.2, -E, TALL, ROOMS.john.tall);
-wallSeg(-1.2, -E, 1.2, -E, TALL, "#e9e5dd");
-wallSeg(1.2, -E, E + 0.07, -E, TALL, ROOMS.doriana.tall);
-wallSeg(-E, -E, -E, -IN, TALL, ROOMS.john.tall);
-wallSeg(-E, -IN, -E, IN, TALL, "#e9e5dd");
-wallSeg(-E, IN, -E, E + 0.07, TALL, ROOMS.angeles.tall);
-/* low walls */
-[["john",-1,-1],["doriana",1,-1],["angeles",-1,1],["luis",1,1]].forEach(function(q){
-  var R = ROOMS[q[0]], sx = q[1], sz = q[2], col = R.wall;
-  /* wall on the corridor side along z (x = sx * IN) */
-  wallSeg(sx * IN, sz * IN, sx * IN, sz * E, LOW, col);
-  /* wall on the corridor side along x with the door gap */
-  var d0 = R.cx - DOOR, d1 = R.cx + DOOR;
-  if (sx < 0) { wallSeg(-E, sz * IN, d0, sz * IN, LOW, col); wallSeg(d1, sz * IN, -IN, sz * IN, LOW, col); }
-  else { wallSeg(IN, sz * IN, d0, sz * IN, LOW, col); wallSeg(d1, sz * IN, E, sz * IN, LOW, col); }
-  /* outer near walls */
-  if (sx > 0) wallSeg(E, sz * IN, E, sz * E, LOW, col);
-  if (sz > 0) wallSeg(sx * IN, E, sx * E, E, LOW, col);
-  /* door threshold strip */
-  add(G.box, M("#cfc8bb", { roughness:0.8 }), DOOR * 2, 0.01, TH + 0.1, R.cx, 0.006, sz * IN, STATIC, false);
-});
+var RJ = ROOMS.john, RD = ROOMS.doriana, RA = ROOMS.angeles, RL = ROOMS.luis;
+/* tall far walls */
+wallSeg(-E - 0.07, -E, 0, -E, TALL, RJ.tall);
+wallSeg(0, -E, E + 0.07, -E, TALL, RD.tall);
+wallSeg(-E, -E, -E, 0, TALL, RJ.tall);
+wallSeg(-E, 0, -E, E + 0.07, TALL, RA.tall);
+/* low near walls */
+wallSeg(E, -E, E, 0, LOW, RD.wall); wallSeg(E, 0, E, E + 0.07, LOW, RL.wall);
+wallSeg(-E, E, 0, E, LOW, RA.wall); wallSeg(0, E, E + 0.07, E, LOW, RL.wall);
+/* the cross in the middle, two-coloured */
+wallSeg(0, -E, 0, 0, MID, RJ.wall, RD.wall);
+wallSeg(0, 0, 0, E, MID, RA.wall, RL.wall);
+wallSeg(-E, 0, 0, 0, MID, RJ.wall, RA.wall);
+wallSeg(0, 0, E, 0, MID, RD.wall, RL.wall);
+/* rooms are built inside CUR, a group placed at the room centre */
+var CUR = STATIC;
+function beginRoom(id){ var R = ROOMS[id]; CUR = new T.Group(); CUR.position.set(R.cx, 0, R.cz); STATIC.add(CUR); return CUR; }
+function endRoom(){ CUR = STATIC; }
+function L(id, x, z){ var R = ROOMS[id]; return new V3(R.cx + x, 0, R.cz + z); }
 
 /* ---------- reusable furniture ---------- */
 var metalDark = M("#2a2e35", { roughness:0.35, metalness:0.6 });
@@ -504,7 +499,7 @@ var aoMat = new T.MeshBasicMaterial({ map:aoTex, transparent:true, depthWrite:fa
 function aoDecal(parent, x, z, sx, sz){
   var m = new T.Mesh(G.plane, aoMat);
   m.rotation.x = -Math.PI / 2; m.scale.set(sx, sz, 1); m.position.set(x, 0.008, z);
-  m.renderOrder = 1; (parent || STATIC).add(m);
+  m.renderOrder = 1; (parent || CUR).add(m);
   return m;
 }
 /* screen textures */
@@ -600,7 +595,7 @@ function chair(parent, x, z, fabric){
   return g;
 }
 function plant(x, z, s, pot){
-  var g = new T.Group(); g.position.set(x, 0, z); g.scale.setScalar(s || 1); STATIC.add(g);
+  var g = new T.Group(); g.position.set(x, 0, z); g.scale.setScalar(s || 1); CUR.add(g);
   aoDecal(g, 0, 0, 0.7, 0.7);
   add(G.cyl, M(pot || "#ece7df", { roughness:0.8 }), 0.2, 0.42, 0.2, 0, 0.21, 0, g);
   add(G.cyl, M("#4a3a2c"), 0.18, 0.02, 0.18, 0, 0.42, 0, g, false);
@@ -614,7 +609,7 @@ function plant(x, z, s, pot){
 /* desk group at a seat point; heading h is the direction the seated person faces */
 function desk(x, z, h, opts){
   opts = opts || {};
-  var g = new T.Group(); g.position.set(x, 0, z); g.rotation.y = h + Math.PI; STATIC.add(g);
+  var g = new T.Group(); g.position.set(x, 0, z); g.rotation.y = h + Math.PI; CUR.add(g);
   aoDecal(g, 0, -0.78, 1.9, 1.0);
   add(G.box, opts.top || deskTop, 1.7, 0.045, 0.82, 0, 0.74, -0.78, g);
   add(G.box, M("#d9d6cf", { roughness:0.6 }), 1.7, 0.012, 0.82, 0, 0.712, -0.78, g, false);
@@ -624,132 +619,112 @@ function desk(x, z, h, opts){
     add(G.box, M("#e8e9eb", { roughness:0.5 }), 0.44, 0.016, 0.14, 0, 0.77, -0.56, g, false);
     add(G.box, M("#e8e9eb", { roughness:0.5 }), 0.06, 0.02, 0.1, 0.36, 0.772, -0.54, g, false);
   }
-  /* the chair is dynamic (it is part of the person's seat), so it stays out of the merge */
-  var cg = new T.Group(); cg.position.set(x, 0, z); cg.rotation.y = h + Math.PI; scene.add(cg);
+  var cg = new T.Group(); cg.position.set(x, 0, z); cg.rotation.y = h + Math.PI; CUR.add(cg);
   chair(cg, 0, 0.02, opts.chair);
   return g;
 }
-function signTex(title, sub, color){
-  return canvasTex(512, 170, function(g, w, h){
-    g.fillStyle = "#ffffff"; rrect(g, 0, 0, w, h, 22); g.fill();
-    g.fillStyle = color; rrect(g, 0, 0, 30, h, 14); g.fill(); g.fillRect(16, 0, 14, h);
-    g.fillStyle = "#1b1d22"; g.font = "800 62px " + FONT; g.textBaseline = "alphabetic"; g.fillText(title, 58, 86);
-    g.fillStyle = "#5f6670"; g.font = "600 34px " + FONT; g.fillText(sub, 60, 136);
-  });
-}
-function roomSign(x, z, title, sub, color){
-  var g = new T.Group(); g.position.set(x, 0, z); g.rotation.y = Math.PI / 4; STATIC.add(g);
-  add(G.cyl, metalDark, 0.03, 1.3, 0.03, 0, 0.65, -0.02, g);
-  add(G.cyl, metalDark, 0.16, 0.03, 0.16, 0, 0.015, -0.02, g, false);
-  add(G.box, M("#f7f6f2"), 1.3, 0.44, 0.03, 0, 1.45, -0.02, g);
-  panel(basicTex(signTex(title, sub, color)), 1.28, 0.425, 0, 1.45, 0.0, 0, g);
-}
-
 /* ---------- ROOM: John, woodworking workshop ---------- */
-var motes = null, shopLight;
+var shopLight, sawPuff = [], tokFlash;
 (function(){
-  /* free-standing workbench, John stands behind it facing the camera */
-  var bx = -4.6, bz = -4.4;
-  aoDecal(STATIC, bx, bz, 2.6, 1.3);
-  var benchTop = M("#c99a63", { roughness:0.6 });
-  add(G.box, benchTop, 2.1, 0.08, 0.82, bx, 0.88, bz);
+  beginRoom("john");
+  /* free-standing workbench; John stands behind it facing the camera */
+  var bx = -0.25, bz = -0.45;
+  aoDecal(CUR, bx, bz, 2.6, 1.3);
+  add(G.box, M("#c99a63", { roughness:0.6 }), 2.1, 0.08, 0.82, bx, 0.88, bz);
   [[-0.95,-0.33],[0.95,-0.33],[-0.95,0.33],[0.95,0.33]].forEach(function(q){ add(G.box, M("#a8794a"), 0.09, 0.84, 0.09, bx + q[0], 0.42, bz + q[1]); });
-  add(G.box, M("#a8794a"), 1.9, 0.06, 0.6, bx, 0.18, bz, STATIC, false);
+  add(G.box, M("#a8794a"), 1.9, 0.06, 0.6, bx, 0.18, bz, CUR, false);
   /* vice on the right end */
   add(G.box, M("#3d5a7a", { roughness:0.4, metalness:0.5 }), 0.18, 0.12, 0.16, bx + 0.92, 0.95, bz + 0.38);
-  add(G.cyl, chrome, 0.012, 0.3, 0.012, bx + 0.92, 0.93, bz + 0.52, STATIC, false).rotation.x = Math.PI / 2;
-  /* board being planed, shavings, clamps, square and mallet */
+  add(G.cyl, chrome, 0.012, 0.3, 0.012, bx + 0.92, 0.93, bz + 0.52, CUR, false).rotation.x = Math.PI / 2;
+  /* board being worked, shavings, clamps, square */
   add(G.box, M("#d9b27f", { roughness:0.55 }), 1.2, 0.04, 0.2, bx - 0.15, 0.94, bz - 0.05);
   var shav = M("#efd4a4", { roughness:0.8 });
-  for (var i = 0; i < 9; i++) add(G.ring, shav, 0.03, 0.03, 0.03, bx + 0.55 + (i % 3) * 0.06, 0.935, bz + 0.12 + Math.floor(i / 3) * 0.05, STATIC, false).rotation.set(1.2 * i, i, 0.4);
-  [-0.6, 0.2].forEach(function(o){
-    add(G.box, chrome, 0.03, 0.03, 0.5, bx + o, 0.97, bz, STATIC, false);
-    add(G.box, M("#d23d2a", { roughness:0.5 }), 0.06, 0.08, 0.05, bx + o, 0.97, bz - 0.24, STATIC, false);
-    add(G.box, M("#d23d2a", { roughness:0.5 }), 0.06, 0.08, 0.05, bx + o, 0.97, bz + 0.22, STATIC, false);
+  for (var i = 0; i < 9; i++) add(G.ring, shav, 0.03, 0.03, 0.03, bx + 0.55 + (i % 3) * 0.06, 0.935, bz + 0.12 + Math.floor(i / 3) * 0.05, CUR, false).rotation.set(1.2 * i, i, 0.4);
+  [-0.6, 0.25].forEach(function(o){
+    add(G.box, chrome, 0.03, 0.03, 0.5, bx + o, 0.97, bz, CUR, false);
+    add(G.box, M("#d23d2a", { roughness:0.5 }), 0.06, 0.08, 0.05, bx + o, 0.97, bz - 0.24, CUR, false);
+    add(G.box, M("#d23d2a", { roughness:0.5 }), 0.06, 0.08, 0.05, bx + o, 0.97, bz + 0.22, CUR, false);
   });
-  add(G.box, chrome, 0.3, 0.008, 0.04, bx - 0.75, 0.93, bz + 0.25, STATIC, false);
-  add(G.box, chrome, 0.04, 0.008, 0.18, bx - 0.88, 0.93, bz + 0.17, STATIC, false);
+  add(G.box, chrome, 0.3, 0.008, 0.04, bx - 0.75, 0.93, bz + 0.25, CUR, false);
+  add(G.box, chrome, 0.04, 0.008, 0.18, bx - 0.88, 0.93, bz + 0.17, CUR, false);
   /* pegboard with tools on the back wall */
   var pegTex = canvasTex(256, 128, function(g, w, h){
     g.fillStyle = "#b98d5c"; g.fillRect(0, 0, w, h);
     g.fillStyle = "rgba(60,38,20,0.55)";
     for (var y = 6; y < h; y += 10) for (var x = 6; x < w; x += 10) { g.beginPath(); g.arc(x, y, 1.6, 0, 7); g.fill(); }
   });
-  panel(texMat(pegTex), 2.4, 1.1, bx, 1.7, -E + 0.08, 0);
-  var tz = -E + 0.11, steel = M("#9aa3ad", { roughness:0.3, metalness:0.8 }), handle = M("#7a4a26", { roughness:0.6 });
-  /* hammer */
-  add(G.box, handle, 0.035, 0.32, 0.025, bx - 1.0, 1.65, tz); add(G.box, steel, 0.14, 0.05, 0.04, bx - 1.0, 1.82, tz);
-  /* saw */
-  add(G.box, steel, 0.42, 0.13, 0.006, bx - 0.55, 1.75, tz); add(G.box, handle, 0.1, 0.12, 0.03, bx - 0.3, 1.77, tz);
-  /* square */
-  add(G.box, steel, 0.3, 0.03, 0.006, bx - 0.05, 1.95, tz); add(G.box, steel, 0.03, 0.2, 0.006, bx - 0.19, 1.86, tz);
-  /* chisels */
-  for (var c = 0; c < 4; c++) { add(G.cyl, handle, 0.015, 0.11, 0.015, bx + 0.2 + c * 0.08, 1.62, tz); add(G.box, steel, 0.02, 0.1, 0.006, bx + 0.2 + c * 0.08, 1.51, tz); }
-  /* hand plane on a shelf, tape measure, screwdrivers */
-  add(G.box, M("#5b6168", { metalness:0.6, roughness:0.35 }), 0.26, 0.07, 0.07, bx + 0.75, 1.42, tz);
-  add(G.cyl, M("#f2c230", { roughness:0.4 }), 0.05, 0.035, 0.05, bx + 0.75, 1.9, tz).rotation.x = Math.PI / 2;
-  for (var s = 0; s < 3; s++) { add(G.cyl, M(["#d23d2a","#2a6fb0","#f2c230"][s]), 0.014, 0.1, 0.014, bx + 1.0, 1.72 - s * 0.0, tz - 0.0 + 0).position.x = bx + 0.98 + s * 0.06; }
+  var px = -0.2, tz = -W + 0.04;
+  panel(texMat(pegTex), 2.4, 1.1, px, 1.7, -W + 0.01, 0);
+  var steel = M("#9aa3ad", { roughness:0.3, metalness:0.8 }), handle = M("#7a4a26", { roughness:0.6 });
+  add(G.box, handle, 0.035, 0.32, 0.025, px - 1.0, 1.65, tz); add(G.box, steel, 0.14, 0.05, 0.04, px - 1.0, 1.82, tz);
+  add(G.box, steel, 0.42, 0.13, 0.006, px - 0.55, 1.75, tz); add(G.box, handle, 0.1, 0.12, 0.03, px - 0.3, 1.77, tz);
+  add(G.box, steel, 0.3, 0.03, 0.006, px - 0.05, 1.95, tz); add(G.box, steel, 0.03, 0.2, 0.006, px - 0.19, 1.86, tz);
+  for (var c = 0; c < 4; c++) { add(G.cyl, handle, 0.015, 0.11, 0.015, px + 0.2 + c * 0.08, 1.62, tz); add(G.box, steel, 0.02, 0.1, 0.006, px + 0.2 + c * 0.08, 1.51, tz); }
+  add(G.box, M("#5b6168", { metalness:0.6, roughness:0.35 }), 0.26, 0.07, 0.07, px + 0.75, 1.42, tz);
+  add(G.cyl, M("#f2c230", { roughness:0.4 }), 0.05, 0.035, 0.05, px + 0.75, 1.9, tz).rotation.x = Math.PI / 2;
+  ["#d23d2a","#2a6fb0","#f2c230"].forEach(function(col, s){ add(G.cyl, M(col), 0.014, 0.1, 0.014, px + 0.98 + s * 0.06, 1.72, tz); });
   /* lumber rack on the left wall */
-  var rx = -E + 0.3;
+  var rx = -W + 0.28;
   for (var lv = 0; lv < 3; lv++) {
-    [-4.4, -3.4, -2.4].forEach(function(z){ add(G.box, metalDark, 0.42, 0.04, 0.05, rx, 0.55 + lv * 0.5, z, STATIC, false); });
-    for (var pk = 0; pk < 3; pk++) add(G.box, M(["#d9b27f","#c4935c","#8a5a36","#e6c89a"][(lv + pk) % 4], { roughness:0.6 }), 0.1, 0.035, 2.6, rx - 0.12 + pk * 0.11, 0.6 + lv * 0.5, -3.4);
+    [-1.3, -0.2, 0.9].forEach(function(z){ add(G.box, metalDark, 0.42, 0.04, 0.05, rx, 0.55 + lv * 0.5, z, CUR, false); });
+    for (var pk = 0; pk < 3; pk++) add(G.box, M(["#d9b27f","#c4935c","#8a5a36","#e6c89a"][(lv + pk) % 4], { roughness:0.6 }), 0.1, 0.035, 2.5, rx - 0.12 + pk * 0.11, 0.6 + lv * 0.5, -0.2);
   }
-  /* half-built cabinet carcass, right back corner, open front */
-  var cx = -2.1, cz = -6.35;
-  aoDecal(STATIC, cx, cz, 1.3, 1.0);
+  /* half-built cabinet carcass, back right corner, open front */
+  var cx = 1.75, cz = -1.95;
+  aoDecal(CUR, cx, cz, 1.3, 1.0);
   add(G.box, birch, 0.02, 0.86, 0.58, cx - 0.4, 0.43, cz);
   add(G.box, birch, 0.02, 0.86, 0.58, cx + 0.4, 0.43, cz);
   add(G.box, birch, 0.8, 0.02, 0.58, cx, 0.1, cz);
-  add(G.box, M("#2a2e35"), 0.78, 0.09, 0.5, cx, 0.045, cz - 0.02, STATIC, false);
-  add(G.box, birch, 0.8, 0.02, 0.1, cx, 0.85, cz + 0.24, STATIC, false);
-  add(G.box, birch, 0.8, 0.02, 0.1, cx, 0.85, cz - 0.24, STATIC, false);
-  add(G.box, birch, 0.78, 0.015, 0.54, cx, 0.48, cz, STATIC, false);
-  add(G.box, M("#d9bd92", { roughness:0.6 }), 0.42, 0.7, 0.02, cx + 0.72, 0.36, cz + 0.12).rotation.set(-0.12, -0.3, 0);
-  /* saw horses with a plank */
-  var hz = -2.05;
-  [-6.1, -4.7].forEach(function(x){
-    add(G.box, M("#c49a62"), 0.08, 0.07, 0.62, x, 0.68, hz).rotation.y = Math.PI / 2;
+  add(G.box, M("#2a2e35"), 0.78, 0.09, 0.5, cx, 0.045, cz - 0.02, CUR, false);
+  add(G.box, birch, 0.8, 0.02, 0.1, cx, 0.85, cz + 0.24, CUR, false);
+  add(G.box, birch, 0.8, 0.02, 0.1, cx, 0.85, cz - 0.24, CUR, false);
+  add(G.box, birch, 0.78, 0.015, 0.54, cx, 0.48, cz, CUR, false);
+  add(G.box, M("#d9bd92", { roughness:0.6 }), 0.42, 0.7, 0.02, cx + 0.62, 0.36, cz + 0.62).rotation.set(-0.15, -0.5, 0);
+  /* saw horses near the front with a plank and a pencil cut line */
+  var hz = 1.55;
+  [-0.7, 0.7].forEach(function(x){
+    add(G.box, M("#c49a62"), 0.62, 0.07, 0.08, x, 0.68, hz);
     [-1, 1].forEach(function(sd){ [-1, 1].forEach(function(f){ add(G.box, M("#b0854f"), 0.05, 0.7, 0.05, x + sd * 0.24, 0.33, hz + f * 0.12).rotation.set(f * 0.25, 0, -sd * 0.12); }); });
   });
-  add(G.box, M("#d9b27f", { roughness:0.55 }), 2.0, 0.04, 0.26, -5.4, 0.735, hz);
+  add(G.box, M("#d9b27f", { roughness:0.55 }), 2.0, 0.04, 0.26, 0, 0.735, hz);
+  add(G.box, M("#3a2a1e"), 0.006, 0.002, 0.26, 0.3, 0.756, hz, CUR, false);
   /* dust collector, offcut bin, toolbox, broom */
-  add(G.cyl, M("#d9d4cb"), 0.26, 0.9, 0.26, -6.75, 0.45, -6.75);
-  add(G.cyl, M("#5a6f8a", { roughness:0.9 }), 0.3, 0.55, 0.3, -6.75, 1.2, -6.75);
-  add(G.cyl, metalDark, 0.04, 1.2, 0.04, -6.75, 2.05, -6.95, STATIC, false);
-  add(G.cyl, M("#4a5560"), 0.24, 0.5, 0.24, -6.75, 0.25, -5.35);
-  for (var o = 0; o < 6; o++) add(G.box, M(o % 2 ? "#d9b27f" : "#a8794a"), 0.05, 0.6 + o * 0.05, 0.06, -6.75 + (o % 3 - 1) * 0.07, 0.5, -5.35 + (o > 2 ? 0.06 : -0.06), STATIC, false).rotation.z = (o - 2.5) * 0.06;
-  add(G.box, M("#c8372d", { roughness:0.45, metalness:0.2 }), 0.5, 0.24, 0.24, -6.2, 0.12, -6.8);
-  add(G.cyl, M("#a8794a"), 0.014, 1.3, 0.014, -1.45, 0.65, -3.0, STATIC, false).rotation.z = 0.18;
-  add(G.box, M("#d9b23a"), 0.3, 0.08, 0.04, -1.56, 0.06, -3.0, STATIC, false);
-  /* hanging shop light */
-  add(G.box, M("#3a3f47", { metalness:0.4, roughness:0.4 }), 1.4, 0.06, 0.22, -4.4, 2.6, -4.7, STATIC, false);
-  add(G.box, new T.MeshBasicMaterial({ color:0xfff1d6, toneMapped:false }), 1.3, 0.02, 0.14, -4.4, 2.565, -4.7, STATIC, false);
-  shopLight = new T.PointLight(0xffd9a0, 0.75, 7.5, 1.6);
-  shopLight.position.set(-4.4, 2.4, -4.4); scene.add(shopLight);
+  add(G.cyl, M("#d9d4cb"), 0.26, 0.9, 0.26, -1.95, 0.45, -1.95);
+  add(G.cyl, M("#5a6f8a", { roughness:0.9 }), 0.3, 0.55, 0.3, -1.95, 1.2, -1.95);
+  add(G.cyl, metalDark, 0.04, 1.2, 0.04, -1.95, 2.05, -2.2, CUR, false);
+  add(G.cyl, M("#4a5560"), 0.22, 0.5, 0.22, 2.0, 0.25, -0.55);
+  for (var o = 0; o < 6; o++) add(G.box, M(o % 2 ? "#d9b27f" : "#a8794a"), 0.05, 0.6 + o * 0.05, 0.06, 2.0 + (o % 3 - 1) * 0.07, 0.5, -0.55 + (o > 2 ? 0.06 : -0.06), CUR, false).rotation.z = (o - 2.5) * 0.06;
+  add(G.box, M("#c8372d", { roughness:0.45, metalness:0.2 }), 0.5, 0.24, 0.24, 2.0, 0.12, 0.45);
+  add(G.cyl, M("#a8794a"), 0.014, 1.3, 0.014, 2.22, 0.65, 1.9, CUR, false).rotation.x = -0.18;
+  add(G.box, M("#d9b23a"), 0.3, 0.08, 0.04, 2.22, 0.06, 2.0, CUR, false);
+  /* hanging shop light, warm */
+  add(G.box, M("#3a3f47", { metalness:0.4, roughness:0.4 }), 1.4, 0.06, 0.22, bx, 2.6, bz - 0.3, CUR, false);
+  add(G.box, new T.MeshBasicMaterial({ color:0xfff1d6, toneMapped:false }), 1.3, 0.02, 0.14, bx, 2.565, bz - 0.3, CUR, false);
+  shopLight = new T.PointLight(0xffd29a, 0.8, 6.5, 1.6);
+  shopLight.position.set(bx, 2.4, bz); CUR.add(shopLight);
   /* sawdust on the floor */
-  var dustTex = canvasTex(128, 128, function(g, w, h){
+  var dustTex = canvasTex(128, 128, function(g){
     var r = seeded(41);
     for (var i = 0; i < 260; i++) { g.fillStyle = "rgba(236,206,150," + (0.2 + r() * 0.5).toFixed(2) + ")"; var a = r() * 6.28, d = Math.pow(r(), 0.7) * 58; g.fillRect(64 + Math.cos(a) * d, 64 + Math.sin(a) * d, 2, 2); }
   });
   var dustMat = new T.MeshBasicMaterial({ map:dustTex, transparent:true, depthWrite:false });
-  [[-4.6,-4.9,2.6],[-5.4,-2.0,1.8],[-2.2,-5.6,1.2],[-3.9,-3.6,1.0]].forEach(function(q){ var d = new T.Mesh(G.plane, dustMat); d.rotation.x = -Math.PI / 2; d.scale.set(q[2], q[2] * 0.7, 1); d.position.set(q[0], 0.01, q[1]); d.renderOrder = 1; STATIC.add(d); });
-  /* floating dust motes in the shop light */
-  var N = 70, pos = new Float32Array(N * 3), seed = [];
-  for (var m = 0; m < N; m++) { seed.push([rand(-6.6, -2.0), rand(0.3, 2.4), rand(-6.6, -2.2), rand(0, 6.28), rand(0.05, 0.16)]); }
-  var mg = new T.BufferGeometry(); mg.setAttribute("position", new T.BufferAttribute(pos, 3));
-  motes = new T.Points(mg, new T.PointsMaterial({ color:0xffe2b0, size:0.035, transparent:true, opacity:0.7, depthWrite:false, sizeAttenuation:true }));
-  motes.userData.seed = seed; motes.frustumCulled = false; scene.add(motes);
-  roomSign(-1.75, -1.75, "Workshop", "John, cabinet maker", "#b5452f");
+  [[bx,-1.0,2.4],[0.3,1.6,1.4],[1.75,-1.3,1.1]].forEach(function(q){ var d = new T.Mesh(G.plane, dustMat); d.rotation.x = -Math.PI / 2; d.scale.set(q[2], q[2] * 0.7, 1); d.position.set(q[0], 0.01, q[1]); d.renderOrder = 1; CUR.add(d); });
+  endRoom();
+  /* dynamic bits that follow John's work: a sawdust puff at the cut and a small flash where the hammer lands */
+  for (var k = 0; k < 7; k++) { var m = new T.Mesh(G.lowSph, new T.MeshBasicMaterial({ color:0xf1d9ac, transparent:true, opacity:0, depthWrite:false })); m.scale.setScalar(0.03); m.visible = false; scene.add(m); sawPuff.push({ m:m, o:k / 7 }); }
+  var flashTex = canvasTex(64, 64, function(g, w, h){ var gr = g.createRadialGradient(32, 32, 2, 32, 32, 30); gr.addColorStop(0, "rgba(255,255,240,1)"); gr.addColorStop(0.4, "rgba(255,230,160,0.7)"); gr.addColorStop(1, "rgba(255,230,160,0)"); g.fillStyle = gr; g.fillRect(0, 0, w, h); });
+  tokFlash = new T.Sprite(new T.SpriteMaterial({ map:flashTex, transparent:true, depthWrite:false, opacity:0, toneMapped:false }));
+  tokFlash.scale.setScalar(0.22); tokFlash.visible = false; scene.add(tokFlash);
 })();
 
 /* ---------- ROOM: Doriana, dealership back office ---------- */
 var deskLampLight;
 (function(){
-  var seat = v3(2.95, -4.4), h = -Math.PI / 2;
-  var dg = desk(seat.x, seat.z, h, { top:M("#a77b52", { roughness:0.5 }), chair:"#5a4a78" });
+  beginRoom("doriana");
+  var sx = -0.85, sz = 0.25, h = -Math.PI / 2;
+  var dg = desk(sx, sz, h, { top:M("#a77b52", { roughness:0.5 }), chair:"#5a4a78" });
   monitor(dg, 0.25, -1.0, 0.58, 0.34, "doc", 0);
-  /* stacks of credit applications and contracts, folders, stamps, calculator, desk phone */
+  /* stacks of credit applications and contracts, folders, stamp, calculator */
   var r = seeded(5);
   [[-0.62,-0.62,9],[-0.62,-0.95,14],[0.62,-0.95,6],[-0.3,-1.02,4]].forEach(function(q){
     for (var i = 0; i < q[2]; i++) add(G.box, i % 4 === 3 ? M("#f3e7c8") : paperMat, 0.22, 0.012, 0.29, q[0] + (r() - 0.5) * 0.02, 0.77 + i * 0.012, q[1] + (r() - 0.5) * 0.02, dg, false).rotation.y = (r() - 0.5) * 0.12;
@@ -766,22 +741,33 @@ var deskLampLight;
   add(G.cyl, lampMat, 0.01, 0.42, 0.01, 0.72, 0.98, -1.05, dg, false);
   add(G.cyl, M("#5a4a78", { roughness:0.5 }), 0.09, 0.12, 0.06, 0.65, 1.17, -0.95, dg, false).rotation.x = 0.6;
   add(G.sph, new T.MeshBasicMaterial({ color:0xfff0c8, toneMapped:false }), 0.03, 0.03, 0.03, 0.64, 1.13, -0.92, dg, false);
-  deskLampLight = new T.PointLight(0xffc98a, 0.7, 3.4, 2);
-  deskLampLight.position.set(seat.x - 0.9, 1.2, seat.z - 0.55); scene.add(deskLampLight);
-  /* filing cabinets against the corridor wall */
-  [-6.55, -5.9].forEach(function(z){
-    add(G.box, M("#8c949d", { roughness:0.45, metalness:0.4 }), 0.6, 1.32, 0.6, IN + 0.38, 0.66, z);
-    for (var d = 0; d < 4; d++) { add(G.box, M("#7d858e", { roughness:0.45, metalness:0.4 }), 0.01, 0.28, 0.54, IN + 0.685, 0.18 + d * 0.32, z, STATIC, false); add(G.box, chrome, 0.02, 0.025, 0.14, IN + 0.7, 0.26 + d * 0.32, z, STATIC, false); }
+  deskLampLight = new T.PointLight(0xffc98a, 0.75, 3.4, 2);
+  deskLampLight.position.set(sx - 0.9, 1.2, sz - 0.55); CUR.add(deskLampLight);
+  var wz = -W + 0.005;
+  /* framed car poster on the back wall, over the filing cabinets */
+  var posterTex = canvasTex(256, 180, function(g, w, hh){
+    var gr = g.createLinearGradient(0, 0, 0, hh); gr.addColorStop(0, "#f7b267"); gr.addColorStop(0.6, "#f4845f"); gr.addColorStop(1, "#4b3b47");
+    g.fillStyle = gr; g.fillRect(0, 0, w, hh);
+    g.fillStyle = "#1f2430"; g.beginPath(); g.moveTo(30, 140); g.quadraticCurveTo(40, 112, 80, 108); g.lineTo(110, 84); g.quadraticCurveTo(150, 76, 180, 96); g.lineTo(212, 108); g.quadraticCurveTo(232, 116, 230, 140); g.closePath(); g.fill();
+    g.fillStyle = "#111"; g.beginPath(); g.arc(80, 140, 16, 0, 7); g.arc(190, 140, 16, 0, 7); g.fill();
+    g.fillStyle = "#2b2420"; g.fillRect(0, hh - 22, w, 22);
+    g.fillStyle = "#ffffff"; g.font = "700 14px " + FONT; g.fillText("THE OPEN ROAD", 12, hh - 7);
   });
-  add(G.box, M("#c9a46a", { roughness:0.85 }), 0.42, 0.28, 0.32, IN + 0.38, 1.46, -6.4);
+  add(G.box, M("#2b2420"), 0.74, 0.54, 0.04, -1.65, 2.05, wz + 0.02);
+  panel(basicTex(posterTex), 0.68, 0.48, -1.65, 2.05, wz + 0.045, 0);
+  /* filing cabinets in the back left corner */
+  [-2.05, -1.45].forEach(function(xx){
+    add(G.box, M("#8c949d", { roughness:0.45, metalness:0.4 }), 0.6, 1.32, 0.6, xx, 0.66, -W + 0.32);
+    for (var d = 0; d < 4; d++) { add(G.box, M("#7d858e", { roughness:0.45, metalness:0.4 }), 0.54, 0.28, 0.01, xx, 0.18 + d * 0.32, -W + 0.625, CUR, false); add(G.box, chrome, 0.14, 0.025, 0.02, xx, 0.26 + d * 0.32, -W + 0.64, CUR, false); }
+  });
+  add(G.box, M("#c9a46a", { roughness:0.85 }), 0.42, 0.28, 0.32, -2.05, 1.46, -W + 0.32);
   /* window onto the showroom with a generic car */
-  var showTex = canvasTex(512, 300, function(g, w, h){
-    var gr = g.createLinearGradient(0, 0, 0, h); gr.addColorStop(0, "#f4f5f7"); gr.addColorStop(0.62, "#e4e7eb"); gr.addColorStop(0.63, "#c9ced4"); gr.addColorStop(1, "#aeb5bd");
-    g.fillStyle = gr; g.fillRect(0, 0, w, h);
+  var showTex = canvasTex(512, 300, function(g, w, hh){
+    var gr = g.createLinearGradient(0, 0, 0, hh); gr.addColorStop(0, "#f4f5f7"); gr.addColorStop(0.62, "#e4e7eb"); gr.addColorStop(0.63, "#c9ced4"); gr.addColorStop(1, "#aeb5bd");
+    g.fillStyle = gr; g.fillRect(0, 0, w, hh);
     for (var i = 0; i < 5; i++) { g.fillStyle = "rgba(255,255,240,0.9)"; g.beginPath(); g.ellipse(50 + i * 105, 14, 30, 6, 0, 0, 7); g.fill(); }
-    g.fillStyle = "#203a5c"; rrect(g, 150, 34, 212, 46, 10); g.fill();
-    g.fillStyle = "#ffffff"; g.font = "700 26px " + FONT; g.textAlign = "center"; g.textBaseline = "middle"; g.fillText("SHOWROOM", 256, 58);
-    /* the car: a generic sedan silhouette */
+    g.fillStyle = "#203a5c"; rrect(g, 30, 34, 190, 44, 10); g.fill();
+    g.fillStyle = "#ffffff"; g.font = "700 26px " + FONT; g.textAlign = "center"; g.textBaseline = "middle"; g.fillText("SHOWROOM", 125, 57);
     var cx = 256, base = 238;
     g.fillStyle = "rgba(0,0,0,0.18)"; g.beginPath(); g.ellipse(cx, base + 14, 190, 14, 0, 0, 7); g.fill();
     var body = g.createLinearGradient(0, 160, 0, base); body.addColorStop(0, "#c8382d"); body.addColorStop(1, "#7e1e18");
@@ -795,110 +781,94 @@ var deskLampLight;
     g.fillStyle = "#ffe9a8"; g.fillRect(cx + 162, base - 40, 14, 8);
     g.fillStyle = "rgba(255,255,255,0.35)"; g.fillRect(cx - 150, base - 52, 290, 4);
   });
-  var wx = 4.3, wy = 1.55, ww = 2.3, wh = 1.3, wz = -E + 0.075;
-  panel(basicTex(showTex), ww, wh, wx, wy, wz, 0);
-  add(G.box, alu, ww + 0.1, 0.06, 0.06, wx, wy - wh / 2 - 0.02, wz, STATIC, false);
-  add(G.box, alu, ww + 0.1, 0.06, 0.06, wx, wy + wh / 2 + 0.02, wz, STATIC, false);
-  add(G.box, alu, 0.06, wh + 0.1, 0.06, wx - ww / 2 - 0.02, wy, wz, STATIC, false);
-  add(G.box, alu, 0.06, wh + 0.1, 0.06, wx + ww / 2 + 0.02, wy, wz, STATIC, false);
-  add(G.box, alu, 0.04, wh, 0.04, wx, wy, wz, STATIC, false);
-  /* neutral dealership sign above the window */
-  var dealTex = canvasTex(512, 96, function(g, w, h){ g.fillStyle = "#203a5c"; rrect(g, 0, 0, w, h, 20); g.fill(); g.fillStyle = "#ffffff"; g.font = "800 50px " + FONT; g.textAlign = "center"; g.textBaseline = "middle"; g.fillText("DEALERSHIP", w / 2, h / 2 + 2); });
-  panel(basicTex(dealTex), 1.6, 0.3, wx, 2.48, wz + 0.01, 0);
-  /* manager's office door */
-  var doorX = 6.4;
-  add(G.box, M("#7a5634", { roughness:0.55 }), 0.92, 2.06, 0.05, doorX, 1.03, wz);
-  add(G.box, M("#ece4d6"), 1.04, 0.07, 0.07, doorX, 2.09, wz, STATIC, false);
-  add(G.box, M("#ece4d6"), 0.06, 2.1, 0.07, doorX - 0.5, 1.05, wz, STATIC, false);
-  add(G.box, M("#ece4d6"), 0.06, 2.1, 0.07, doorX + 0.5, 1.05, wz, STATIC, false);
-  add(G.sph, chrome, 0.03, 0.03, 0.03, doorX + 0.36, 1.0, wz + 0.04, STATIC, false);
-  var mgrTex = canvasTex(256, 64, function(g, w, h){ g.fillStyle = "#d9c08a"; rrect(g, 0, 0, w, h, 8); g.fill(); g.fillStyle = "#2b2420"; g.font = "700 30px " + FONT; g.textAlign = "center"; g.textBaseline = "middle"; g.fillText("MANAGER", w / 2, h / 2 + 2); });
-  panel(basicTex(mgrTex), 0.42, 0.105, doorX, 1.6, wz + 0.03, 0);
-  /* framed car poster on the wall */
-  var posterTex = canvasTex(256, 180, function(g, w, h){
-    var gr = g.createLinearGradient(0, 0, 0, h); gr.addColorStop(0, "#f7b267"); gr.addColorStop(0.6, "#f4845f"); gr.addColorStop(1, "#4b3b47");
-    g.fillStyle = gr; g.fillRect(0, 0, w, h);
-    g.fillStyle = "#1f2430"; g.beginPath(); g.moveTo(30, 140); g.quadraticCurveTo(40, 112, 80, 108); g.lineTo(110, 84); g.quadraticCurveTo(150, 76, 180, 96); g.lineTo(212, 108); g.quadraticCurveTo(232, 116, 230, 140); g.closePath(); g.fill();
-    g.fillStyle = "#111"; g.beginPath(); g.arc(80, 140, 16, 0, 7); g.arc(190, 140, 16, 0, 7); g.fill();
-    g.fillStyle = "#2b2420"; g.fillRect(0, h - 22, w, 22);
-    g.fillStyle = "#ffffff"; g.font = "700 14px " + FONT; g.fillText("THE OPEN ROAD", 12, h - 7);
-  });
-  add(G.box, M("#2b2420"), 0.98, 0.72, 0.04, 2.15, 1.7, wz);
-  panel(basicTex(posterTex), 0.9, 0.64, 2.15, 1.7, wz + 0.025, 0);
-  /* wall clock */
-  var clockTex = canvasTex(128, 128, function(g){ g.fillStyle = "#fff"; g.beginPath(); g.arc(64, 64, 62, 0, 7); g.fill(); g.strokeStyle = "#2b2420"; g.lineWidth = 6; g.stroke(); g.lineWidth = 4; g.beginPath(); g.moveTo(64, 64); g.lineTo(64, 24); g.moveTo(64, 64); g.lineTo(92, 74); g.stroke(); });
-  panel(basicTex(clockTex), 0.34, 0.34, 6.4, 2.45, wz + 0.01, 0);
-  /* printer on a stand by the right wall */
-  var px = E - 0.38, pz = -2.4;
-  add(G.box, M("#d9d6cf"), 0.55, 0.72, 0.62, px, 0.36, pz);
-  add(G.box, M("#e9eaec", { roughness:0.4 }), 0.5, 0.26, 0.5, px, 0.85, pz);
-  add(G.box, M("#3a3f47"), 0.44, 0.03, 0.44, px, 0.99, pz);
-  add(G.box, paperMat, 0.2, 0.01, 0.28, px - 0.2, 0.74, pz, STATIC, false);
-  add(G.box, M("#3fa36b"), 0.02, 0.02, 0.02, px - 0.25, 0.94, pz - 0.18, STATIC, false);
-  /* archive boxes, plant */
-  add(G.box, M("#c9a46a", { roughness:0.85 }), 0.42, 0.3, 0.32, 6.8, 0.15, -4.3);
-  add(G.box, M("#c9a46a", { roughness:0.85 }), 0.42, 0.3, 0.32, 6.8, 0.45, -4.32);
-  plant(6.75, -1.7, 0.85);
-  roomSign(1.75, -1.75, "Back Office", "Doriana, assistant to the manager", "#7b5ea7");
+  var wx = 0.15, wy = 1.55, ww = 1.75, wh = 1.1;
+  panel(basicTex(showTex), ww, wh, wx, wy, wz + 0.02, 0);
+  add(G.box, alu, ww + 0.1, 0.06, 0.06, wx, wy - wh / 2 - 0.02, wz + 0.03, CUR, false);
+  add(G.box, alu, ww + 0.1, 0.06, 0.06, wx, wy + wh / 2 + 0.02, wz + 0.03, CUR, false);
+  add(G.box, alu, 0.06, wh + 0.1, 0.06, wx - ww / 2 - 0.02, wy, wz + 0.03, CUR, false);
+  add(G.box, alu, 0.06, wh + 0.1, 0.06, wx + ww / 2 + 0.02, wy, wz + 0.03, CUR, false);
+  add(G.box, alu, 0.04, wh, 0.04, wx, wy, wz + 0.03, CUR, false);
+  var dealTex = canvasTex(512, 96, function(g, w, hh){ g.fillStyle = "#203a5c"; rrect(g, 0, 0, w, hh, 20); g.fill(); g.fillStyle = "#ffffff"; g.font = "800 50px " + FONT; g.textAlign = "center"; g.textBaseline = "middle"; g.fillText("DEALERSHIP", w / 2, hh / 2 + 2); });
+  panel(basicTex(dealTex), 1.3, 0.24, wx, 2.4, wz + 0.02, 0);
+  /* the manager's office door */
+  var doorX = 1.78;
+  add(G.box, M("#7a5634", { roughness:0.55 }), 0.88, 2.06, 0.05, doorX, 1.03, wz + 0.02);
+  add(G.box, M("#ece4d6"), 1.0, 0.07, 0.07, doorX, 2.09, wz + 0.02, CUR, false);
+  add(G.box, M("#ece4d6"), 0.06, 2.1, 0.07, doorX - 0.48, 1.05, wz + 0.02, CUR, false);
+  add(G.box, M("#ece4d6"), 0.06, 2.1, 0.07, doorX + 0.48, 1.05, wz + 0.02, CUR, false);
+  add(G.sph, chrome, 0.03, 0.03, 0.03, doorX - 0.33, 1.0, wz + 0.06, CUR, false);
+  var mgrTex = canvasTex(256, 64, function(g, w, hh){ g.fillStyle = "#d9c08a"; rrect(g, 0, 0, w, hh, 8); g.fill(); g.fillStyle = "#2b2420"; g.font = "700 30px " + FONT; g.textAlign = "center"; g.textBaseline = "middle"; g.fillText("MANAGER", w / 2, hh / 2 + 2); });
+  panel(basicTex(mgrTex), 0.42, 0.105, doorX, 1.6, wz + 0.05, 0);
+  /* printer on a stand by the right wall, archive boxes, plant */
+  add(G.box, M("#d9d6cf"), 0.55, 0.72, 0.62, W - 0.3, 0.36, 0.95);
+  add(G.box, M("#e9eaec", { roughness:0.4 }), 0.5, 0.26, 0.5, W - 0.3, 0.85, 0.95);
+  add(G.box, M("#3a3f47"), 0.44, 0.03, 0.44, W - 0.3, 0.99, 0.95);
+  add(G.box, paperMat, 0.2, 0.01, 0.28, W - 0.5, 0.74, 0.95, CUR, false);
+  add(G.box, M("#3fa36b"), 0.02, 0.02, 0.02, W - 0.55, 0.94, 0.77, CUR, false);
+  add(G.box, M("#c9a46a", { roughness:0.85 }), 0.42, 0.3, 0.32, W - 0.28, 0.15, -0.3);
+  add(G.box, M("#c9a46a", { roughness:0.85 }), 0.42, 0.3, 0.32, W - 0.28, 0.45, -0.32);
+  plant(W - 0.35, W - 0.35, 0.85);
+  endRoom();
 })();
 
 /* ---------- ROOM: Angeles, customer care desk ---------- */
 var queueLamps = [], phoneLamp, callLight;
 (function(){
-  var seat = v3(-5.95, 4.6), h = -Math.PI / 2;
-  var dg = desk(seat.x, seat.z, h, { chair:"#2a5f7a" });
+  beginRoom("angeles");
+  var sx = -0.85, sz = 0.2, h = -Math.PI / 2;
+  var dg = desk(sx, sz, h, { chair:"#2a5f7a" });
   monitor(dg, -0.25, -1.0, 0.58, 0.34, "tickets", 0.1);
   monitor(dg, 0.42, -0.98, 0.5, 0.3, "tickets", -0.25);
   /* cubicle partitions */
   var fab = M("#3e5f86", { roughness:1 });
   [-0.92, 0.92].forEach(function(x){ add(G.box, fab, 0.05, 1.22, 0.95, x, 0.61, -0.72, dg); add(G.box, alu, 0.06, 0.03, 0.97, x, 1.235, -0.72, dg, false); });
   add(G.box, fab, 1.84, 1.22, 0.05, 0, 0.61, -1.24, dg);
-  /* desk phone with blinking line lights */
+  /* desk phone with a blinking line light */
   add(G.box, M("#1d2025"), 0.22, 0.05, 0.18, -0.55, 0.785, -0.5, dg, false);
   add(G.box, M("#2a2e35"), 0.2, 0.035, 0.06, -0.55, 0.82, -0.56, dg, false);
   phoneLamp = new T.MeshBasicMaterial({ color:0xff3b30, toneMapped:false });
   add(G.box, phoneLamp, 0.02, 0.012, 0.02, -0.47, 0.815, -0.44, dg, false);
   /* acoustic panels on the tall wall */
   var acu = [M("#203a5c", { roughness:1 }), M("#2b4f7a", { roughness:1 }), M("#355f8e", { roughness:1 })];
-  [[2.2,1.9],[2.2,1.25],[6.2,1.9],[6.2,1.25],[6.85,1.6],[1.55,1.6]].forEach(function(q, i){ add(G.box, acu[i % 3], 0.06, 0.58, 0.58, -E + 0.1, q[1], q[0], STATIC, false); });
+  [[1.55,1.95],[1.55,1.3],[2.05,1.62]].forEach(function(q, i){ add(G.box, acu[i % 3], 0.06, 0.55, 0.55, -W + 0.03, q[1], q[0], CUR, false); });
   /* queue board above the desk: calls waiting */
-  var qTex = canvasTex(512, 256, function(g, w, h){
-    g.fillStyle = "#0e1a2a"; g.fillRect(0, 0, w, h);
+  var qTex = canvasTex(512, 256, function(g, w, hh){
+    g.fillStyle = "#0e1a2a"; g.fillRect(0, 0, w, hh);
     g.fillStyle = "#7fd3ff"; g.font = "700 30px " + FONT; g.textBaseline = "middle"; g.fillText("CALLS WAITING", 24, 40);
     g.fillStyle = "#ffffff"; g.font = "800 110px " + FONT; g.fillText("3", 28, 140);
     g.fillStyle = "#9fb3c8"; g.font = "600 26px " + FONT; g.fillText("Avg wait  1:12", 200, 112); g.fillText("Solved today  46", 200, 152); g.fillText("Agents on line  5", 200, 192);
     g.fillStyle = "#3fa36b"; g.fillRect(24, 214, 300, 12); g.fillStyle = "#e0a030"; g.fillRect(324, 214, 90, 12); g.fillStyle = "#d9534f"; g.fillRect(414, 214, 40, 12);
   });
-  add(G.box, M("#14171b"), 0.06, 0.8, 1.4, -E + 0.1, 1.95, 4.6);
-  panel(basicTex(qTex), 1.3, 0.68, -E + 0.135, 1.95, 4.6, Math.PI / 2);
-  for (var i = 0; i < 3; i++) { var lm = new T.MeshBasicMaterial({ color:0x3fa36b, toneMapped:false }); add(G.sph, lm, 0.035, 0.035, 0.035, -E + 0.15, 2.42, 4.1 + i * 0.5, STATIC, false); queueLamps.push(lm); }
+  add(G.box, M("#14171b"), 0.06, 0.8, 1.4, -W + 0.03, 1.95, sz);
+  panel(basicTex(qTex), 1.3, 0.68, -W + 0.065, 1.95, sz, Math.PI / 2);
+  for (var i = 0; i < 3; i++) { var lm = new T.MeshBasicMaterial({ color:0x3fa36b, toneMapped:false }); add(G.sph, lm, 0.035, 0.035, 0.035, -W + 0.08, 2.42, sz - 0.5 + i * 0.5, CUR, false); queueLamps.push(lm); }
   /* ticket board: new, in progress, done */
-  var tTex = canvasTex(512, 300, function(g, w, h){
-    g.fillStyle = "#fbfcfd"; g.fillRect(0, 0, w, h);
+  var tTex = canvasTex(512, 300, function(g, w, hh){
+    g.fillStyle = "#fbfcfd"; g.fillRect(0, 0, w, hh);
     g.fillStyle = "#2b3440"; g.font = "700 24px " + FONT; g.textBaseline = "middle";
-    ["NEW","IN PROGRESS","DONE"].forEach(function(t, k){ g.fillText(t, 16 + k * 170, 24); g.fillStyle = "#dfe4ea"; g.fillRect(166 + k * 170, 8, 3, h - 16); g.fillStyle = "#2b3440"; });
+    ["NEW","IN PROGRESS","DONE"].forEach(function(t, k){ g.fillText(t, 16 + k * 170, 24); g.fillStyle = "#dfe4ea"; g.fillRect(166 + k * 170, 8, 3, hh - 16); g.fillStyle = "#2b3440"; });
     var r = seeded(31), cols = ["#ffe27a","#9fe0c9","#ffb3a7","#a7d3ff"];
     for (var k = 0; k < 3; k++) for (var j = 0; j < [4, 3, 6][k]; j++) { g.fillStyle = cols[Math.floor(r() * 4)]; var x = 14 + k * 170 + (j % 2) * 74, y = 50 + Math.floor(j / 2) * 78; g.fillRect(x, y, 66, 64); g.fillStyle = "rgba(0,0,0,0.25)"; g.fillRect(x + 8, y + 14, 46, 4); g.fillRect(x + 8, y + 26, 34, 4); }
   });
-  add(G.box, alu, 0.05, 1.08, 1.72, -E + 0.1, 1.55, 2.6);
-  panel(basicTex(tTex), 1.6, 0.98, -E + 0.13, 1.55, 2.6, Math.PI / 2);
-  /* water cooler */
-  add(G.box, M("#eef0f2", { roughness:0.4 }), 0.34, 0.95, 0.34, -1.68, 0.475, 6.75);
-  add(G.cyl, new T.MeshStandardMaterial({ color:0x9fd3f0, roughness:0.05, transparent:true, opacity:0.55 }), 0.15, 0.4, 0.15, -1.68, 1.15, 6.75, STATIC, false);
-  add(G.box, M("#3c7bd8"), 0.05, 0.05, 0.03, -1.68, 0.8, 6.57, STATIC, false);
-  plant(-6.75, 6.75, 0.95, "#dfe8f0");
-  plant(-1.75, 3.0, 0.75, "#dfe8f0");
+  add(G.box, alu, 0.05, 0.92, 1.42, -W + 0.03, 1.55, -1.55, CUR, false);
+  panel(basicTex(tTex), 1.32, 0.82, -W + 0.06, 1.55, -1.55, Math.PI / 2);
+  /* water cooler in the front right corner, plant */
+  add(G.box, M("#eef0f2", { roughness:0.4 }), 0.34, 0.95, 0.34, W - 0.3, 0.475, W - 0.3);
+  add(G.cyl, new T.MeshStandardMaterial({ color:0x9fd3f0, roughness:0.05, transparent:true, opacity:0.55 }), 0.15, 0.4, 0.15, W - 0.3, 1.15, W - 0.3, CUR, false);
+  add(G.box, M("#3c7bd8"), 0.05, 0.05, 0.03, W - 0.3, 0.8, W - 0.48, CUR, false);
+  plant(-W + 0.35, W - 0.35, 0.95, "#dfe8f0");
   /* cool blue light over the desk */
-  callLight = new T.PointLight(0x8fc4ff, 0.75, 6.5, 1.6);
-  callLight.position.set(-5.2, 2.3, 4.6); scene.add(callLight);
-  roomSign(-1.75, 1.75, "Customer Care", "Angeles, customer service", "#2a8fb0");
+  callLight = new T.PointLight(0x8fc4ff, 0.8, 5.5, 1.6);
+  callLight.position.set(-1.2, 2.3, sz); CUR.add(callLight);
+  endRoom();
 })();
 
 /* ---------- ROOM: Luis, web studio ---------- */
 var ledMat;
 (function(){
-  var seat = v3(2.95, 4.9), h = -Math.PI / 2;
-  var dg = desk(seat.x, seat.z, h, { top:M("#2b2e33", { roughness:0.35 }), chair:"#1d2025" });
+  beginRoom("luis");
+  var sx = -0.85, sz = 0.3, h = -Math.PI / 2;
+  var dg = desk(sx, sz, h, { top:M("#2b2e33", { roughness:0.35 }), chair:"#1d2025" });
   monitor(dg, -0.36, -1.0, 0.6, 0.36, "code", 0.22);
   monitor(dg, 0.36, -1.0, 0.6, 0.36, "web", -0.22);
   laptop(dg, 0.62, -0.62, "analytics", -0.35);
@@ -906,62 +876,41 @@ var ledMat;
   /* LED strip behind the monitors */
   ledMat = new T.MeshBasicMaterial({ color:0x7a6cff, toneMapped:false });
   add(G.box, ledMat, 1.6, 0.025, 0.025, 0, 0.765, -1.17, dg, false);
-  var glowTex = canvasTex(128, 64, function(g, w, h){ var gr = g.createRadialGradient(w / 2, h, 2, w / 2, h, w / 2); gr.addColorStop(0, "rgba(140,120,255,0.8)"); gr.addColorStop(1, "rgba(140,120,255,0)"); g.fillStyle = gr; g.fillRect(0, 0, w, h); });
+  var glowTex = canvasTex(128, 64, function(g, w, hh){ var gr = g.createRadialGradient(w / 2, hh, 2, w / 2, hh, w / 2); gr.addColorStop(0, "rgba(140,120,255,0.8)"); gr.addColorStop(1, "rgba(140,120,255,0)"); g.fillStyle = gr; g.fillRect(0, 0, w, hh); });
   var glow = new T.Mesh(G.plane, new T.MeshBasicMaterial({ map:glowTex, transparent:true, depthWrite:false, blending:T.AdditiveBlending, toneMapped:false }));
-  glow.scale.set(2.2, 0.8, 1); glow.position.set(IN + 0.08, 1.1, seat.z); glow.rotation.y = Math.PI / 2; scene.add(glow);
-  var led = new T.PointLight(0x8a7cff, 0.55, 3.5, 2); led.position.set(IN + 0.5, 1.1, seat.z); scene.add(led);
-  /* bookshelf against the door wall, facing into the room */
-  var bx = 2.4, bz = IN + 0.25;
+  glow.scale.set(2.0, 0.5, 1); glow.position.set(-W + 0.01, 0.78, sz); glow.rotation.y = Math.PI / 2; CUR.add(glow);
+  var led = new T.PointLight(0x8a7cff, 0.6, 3.2, 2); led.position.set(-W + 0.4, 1.1, sz); CUR.add(led);
+  /* bookshelf against the back, facing into the room */
+  var bx = 0.15, bz = -W + 0.2;
   add(G.box, M("#f3f1ec"), 1.1, 1.6, 0.34, bx, 0.8, bz);
   var r = seeded(77), bookC = ["#3c5a78","#f08158","#e0c46a","#5b8c5a","#8a6aa8","#d9d4cb","#2b2e33"];
   for (var s = 0; s < 4; s++) {
     var x = bx - 0.48;
-    while (x < bx + 0.45) { var bw = 0.03 + r() * 0.04, bh = 0.2 + r() * 0.12; add(G.box, M(bookC[Math.floor(r() * bookC.length)]), bw, bh, 0.24, x + bw / 2, 0.08 + s * 0.38 + bh / 2, bz + 0.06, STATIC, false); x += bw + 0.008; }
+    while (x < bx + 0.45) { var bw = 0.03 + r() * 0.04, bh = 0.2 + r() * 0.12; add(G.box, M(bookC[Math.floor(r() * bookC.length)]), bw, bh, 0.24, x + bw / 2, 0.08 + s * 0.38 + bh / 2, bz + 0.06, CUR, false); x += bw + 0.008; }
   }
   /* rolling whiteboard with a sitemap */
-  var wTex = canvasTex(512, 320, function(g, w, h){
-    g.fillStyle = "#fbfcfd"; g.fillRect(0, 0, w, h);
+  var wTex = canvasTex(512, 320, function(g, w, hh){
+    g.fillStyle = "#fbfcfd"; g.fillRect(0, 0, w, hh);
     g.strokeStyle = "#3c5a78"; g.lineWidth = 4;
-    var nodes = [[256, 40]], kids = [[90, 140], [256, 140], [422, 140]], leaves = [[50, 240], [130, 240], [216, 240], [296, 240], [382, 240], [462, 240]];
+    var kids = [[90, 140], [256, 140], [422, 140]], leaves = [[50, 240], [130, 240], [216, 240], [296, 240], [382, 240], [462, 240]];
     kids.forEach(function(k){ g.beginPath(); g.moveTo(256, 62); g.lineTo(k[0], k[1] - 20); g.stroke(); });
     leaves.forEach(function(l, i){ var k = kids[Math.floor(i / 2)]; g.beginPath(); g.moveTo(k[0], k[1] + 20); g.lineTo(l[0], l[1] - 18); g.stroke(); });
     g.lineWidth = 3;
-    nodes.concat(kids).forEach(function(n){ g.strokeStyle = "#f08158"; g.strokeRect(n[0] - 50, n[1] - 20, 100, 40); });
+    [[256, 40]].concat(kids).forEach(function(n){ g.strokeStyle = "#f08158"; g.strokeRect(n[0] - 50, n[1] - 20, 100, 40); });
     leaves.forEach(function(n){ g.strokeStyle = "#3c5a78"; g.strokeRect(n[0] - 34, n[1] - 18, 68, 36); });
   });
-  var wx = 6.0, wz = IN + 0.35;
-  add(G.box, alu, 1.5, 1.0, 0.04, wx, 1.4, wz);
-  panel(basicTex(wTex), 1.42, 0.92, wx, 1.4, wz + 0.025, 0);
-  [-0.65, 0.65].forEach(function(o){ add(G.box, alu, 0.04, 0.9, 0.04, wx + o, 0.45, wz, STATIC, false); add(G.box, alu, 0.04, 0.03, 0.45, wx + o, 0.04, wz, STATIC, false); });
+  var wx = 1.55, wz = -W + 0.3;
+  add(G.box, alu, 1.3, 0.9, 0.04, wx, 1.4, wz);
+  panel(basicTex(wTex), 1.22, 0.82, wx, 1.4, wz + 0.025, 0);
+  [-0.6, 0.6].forEach(function(o){ add(G.box, alu, 0.04, 0.95, 0.04, wx + o, 0.48, wz, CUR, false); add(G.box, alu, 0.04, 0.03, 0.45, wx + o, 0.04, wz, CUR, false); });
   /* beanbag, floor lamp, rug, plant */
-  add(G.sph, M("#f08158", { roughness:0.95 }), 0.45, 0.32, 0.45, 5.9, 0.3, 6.1);
-  add(G.cyl, M("#2b2e33"), 0.15, 0.02, 0.15, 6.85, 0.01, 6.85, STATIC, false);
-  add(G.cyl, M("#2b2e33"), 0.015, 1.6, 0.015, 6.85, 0.8, 6.85, STATIC, false);
-  add(G.cyl, M("#f4efe4", { roughness:0.9 }), 0.17, 0.24, 0.17, 6.85, 1.65, 6.85, STATIC, false);
-  var rug = new T.Mesh(G.plane, M("#d6dbe2", { roughness:1 })); rug.rotation.x = -Math.PI / 2; rug.scale.set(2.4, 3.0, 1); rug.position.set(3.4, 0.01, 4.9); rug.receiveShadow = true; STATIC.add(rug);
-  plant(6.75, 3.3, 1.0, "#2b2e33");
-  roomSign(1.75, 1.75, "Web Studio", "Luis, web manager", "#3c5a78");
-})();
-
-/* ---------- corridor: coffee station at the far end, a bench in the near arm, plants ---------- */
-(function(){
-  var z = -E + 0.35;
-  aoDecal(STATIC, 0, z, 1.8, 0.9);
-  add(G.box, M("#f4f3f0", { roughness:0.6 }), 1.4, 0.9, 0.55, 0, 0.45, z);
-  add(G.box, oakMat, 1.46, 0.05, 0.6, 0, 0.925, z);
-  add(G.box, M("#1e2126", { roughness:0.35, metalness:0.4 }), 0.32, 0.46, 0.32, -0.35, 1.18, z - 0.02);
-  add(G.box, M("#cfd4d9", { roughness:0.3, metalness:0.6 }), 0.2, 0.05, 0.04, -0.35, 1.22, z + 0.16, STATIC, false);
-  [0.05, 0.16, 0.27].forEach(function(x, i){ add(G.cyl, M(["#ffffff","#7b5ea7","#2a8fb0"][i], { roughness:0.4 }), 0.04, 0.1, 0.04, x, 1.0, z + 0.1); });
-  add(G.box, M("#eef0f2"), 0.3, 0.3, 0.3, 0.48, 1.1, z);
-  add(G.box, M("#d23d2a"), 0.18, 0.16, 0.16, 0.48, 1.33, z);
-  var menuTex = canvasTex(256, 160, function(g, w, h){ g.fillStyle = "#2b2420"; g.fillRect(0, 0, w, h); g.fillStyle = "#f4efe4"; g.font = "800 30px " + FONT; g.textAlign = "center"; g.fillText("COFFEE", w / 2, 46); g.font = "600 20px " + FONT; ["Coffee  Tea  Water","Juice  Fruit","Snacks"].forEach(function(t, i){ g.fillText(t, w / 2, 82 + i * 28); }); });
-  panel(basicTex(menuTex), 0.9, 0.56, 0, 1.85, -E + 0.08, 0);
-  /* bench and round rug in the near arm of the corridor */
-  add(G.box, oakMat, 1.5, 0.06, 0.45, 0, 0.45, 5.6);
-  [-0.65, 0.65].forEach(function(x){ add(G.box, metalDark, 0.05, 0.42, 0.4, x, 0.21, 5.6, STATIC, false); });
-  plant(-0.75, 6.75, 1.1); plant(0.75, 6.75, 1.1); plant(-6.85, 0.75, 1.0); plant(6.85, -0.75, 1.0);
-  var plaza = new T.Mesh(new T.CircleGeometry(1, 40), M("#d9cfbf", { roughness:1 }));
-  plaza.rotation.x = -Math.PI / 2; plaza.scale.setScalar(1.05); plaza.position.set(0, 0.008, 0); plaza.receiveShadow = true; STATIC.add(plaza);
+  add(G.sph, M("#f08158", { roughness:0.95 }), 0.42, 0.3, 0.42, 1.55, 0.28, 1.6);
+  add(G.cyl, M("#2b2e33"), 0.15, 0.02, 0.15, W - 0.3, 0.01, W - 0.3, CUR, false);
+  add(G.cyl, M("#2b2e33"), 0.015, 1.6, 0.015, W - 0.3, 0.8, W - 0.3, CUR, false);
+  add(G.cyl, M("#f4efe4", { roughness:0.9 }), 0.17, 0.24, 0.17, W - 0.3, 1.65, W - 0.3, CUR, false);
+  var rug = new T.Mesh(G.plane, M("#59677a", { roughness:1 })); rug.rotation.x = -Math.PI / 2; rug.scale.set(1.9, 2.3, 1); rug.position.set(-0.6, 0.01, sz); rug.receiveShadow = true; CUR.add(rug);
+  plant(W - 0.35, -0.4, 1.0, "#2b2e33");
+  endRoom();
 })();
 
 /* focus ring */
@@ -973,7 +922,9 @@ focusRing.rotation.x = -Math.PI / 2; focusRing.visible = false; scene.add(focusR
 function mergeStatic(){
   STATIC.updateMatrixWorld(true);
   var groups = new Map(), keep = [];
+  var lights = [];
   STATIC.traverse(function(o){
+    if (o.isLight) { lights.push(o); return; }
     if (!o.isMesh) return;
     var key = o.material.uuid + (o.castShadow ? "s" : "n") + (o.renderOrder || 0);
     if (!groups.has(key)) groups.set(key, []);
@@ -997,39 +948,39 @@ function mergeStatic(){
     geos.forEach(function(g){ g.dispose(); });
   });
   keep.forEach(function(o){ var w = o.matrixWorld.clone(); out.add(o); w.decompose(o.position, o.quaternion, o.scale); });
+  lights.forEach(function(l){ var wp = new V3(); l.getWorldPosition(wp); l.parent.remove(l); l.position.copy(wp); scene.add(l); });
   scene.remove(STATIC);
   scene.add(out);
   out.traverse(function(o){ if (o.isMesh) { o.matrixAutoUpdate = false; o.updateMatrix(); } });
 }
 mergeStatic();
 
-/* ---------- places and paths ---------- */
+/* ---------- places and paths (each person only moves inside their own room) ---------- */
 var PLACES = {
-  john:   { hub:v3(-3.0,-3.0), doorIn:v3(-4.2,-1.8), doorOut:v3(-4.2,-0.6), seat:v3(-4.6,-5.25), h:0, seatVia:[v3(-3.0,-5.25)],
-            visit:{ spot:v3(-3.5,-5.45), via:[v3(-3.0,-5.35)] } },
-  doriana:{ hub:v3(4.4,-3.2), doorIn:v3(4.2,-1.8), doorOut:v3(4.2,-0.6), seat:v3(2.95,-4.4), h:-Math.PI / 2, seatVia:[], visit:{ spot:v3(3.75,-5.25), via:[] } },
-  angeles:{ hub:v3(-4.2,3.3), doorIn:v3(-4.2,1.8), doorOut:v3(-4.2,0.6), seat:v3(-5.95,4.6), h:-Math.PI / 2, seatVia:[], visit:{ spot:v3(-5.2,3.6), via:[] } },
-  luis:   { hub:v3(4.2,3.2), doorIn:v3(4.2,1.8), doorOut:v3(4.2,0.6), seat:v3(2.95,4.9), h:-Math.PI / 2, seatVia:[], visit:{ spot:v3(3.8,3.95), via:[] } },
-  coffee: { hub:v3(0,-5.3), doorIn:v3(0,-1.8), doorOut:v3(0,-0.6), spot:v3(0,-6.25), face:v3(0,-7.3) }
+  john:   { hub:L("john", 1.05, 0.5), seat:L("john", -0.25, -1.3), h:0, seatVia:[L("john", 1.05, -1.3)] },
+  doriana:{ hub:L("doriana", 0.5, -0.4), seat:L("doriana", -0.85, 0.25), h:-Math.PI / 2, seatVia:[] },
+  angeles:{ hub:L("angeles", 0.5, 0.5), seat:L("angeles", -0.85, 0.2), h:-Math.PI / 2, seatVia:[] },
+  luis:   { hub:L("luis", 0.6, -0.3), seat:L("luis", -0.85, 0.3), h:-Math.PI / 2, seatVia:[] }
 };
 /* errands inside each room: walk to a spot, face something, do an act */
 var ERRANDS = {
   doriana:[
-    { spot:v3(6.1,-2.4), face:v3(7.3,-2.4), act:"print", dur:[5,7], go:"Walking to the printer", s:"Printing a contract copy" },
-    { spot:v3(2.45,-6.2), face:v3(1.2,-6.2), act:"file", dur:[5,8], go:"Heading to the filing cabinet", s:"Filing deal jackets" },
-    { spot:v3(6.4,-6.3), face:v3(6.4,-7.4), act:"talk", dur:[6,9], go:"Going to see the boss", s:"Answering the boss" }
+    { spot:L("doriana", 1.45, 0.95), face:L("doriana", 2.6, 0.95), act:"print", dur:[5,7], go:"Walking to the printer", s:"Printing a contract copy" },
+    { spot:L("doriana", -1.75, -1.35), face:L("doriana", -1.75, -2.6), act:"file", dur:[5,8], go:"Heading to the filing cabinet", s:"Filing deal jackets" },
+    { spot:L("doriana", 1.78, -1.55), face:L("doriana", 1.78, -2.6), act:"talk", dur:[6,9], go:"Going to see the boss", s:"Answering the boss" }
   ],
   angeles:[
-    { spot:v3(-2.35,6.4), face:v3(-1.68,6.75), act:"sip", item:"water", dur:[5,7], go:"Getting water for her voice", s:"Drinking some water", care:{ water:0.14 } },
-    { spot:v3(-6.3,2.6), face:v3(-7.4,2.6), act:"point", dur:[4,6], go:"Walking to the ticket board", s:"Moving a ticket to Done" }
+    { spot:L("angeles", 1.45, 1.75), face:L("angeles", 2.2, 2.2), act:"sip", item:"water", dur:[5,7], go:"Getting water for her voice", s:"Drinking some water", care:{ water:0.14 } },
+    { spot:L("angeles", -1.6, -1.6), face:L("angeles", -2.6, -1.6), act:"point", dur:[4,6], go:"Walking to the ticket board", s:"Moving a ticket to Done" }
   ],
   john:[
-    { spot:v3(-6.3,-3.4), face:v3(-7.4,-3.4), act:"lift", dur:[2.2,3], go:"Going to the lumber rack", s:"Picking a plank", carry:true },
-    { spot:v3(-2.1,-5.55), face:v3(-2.1,-6.5), act:"measure", dur:[5,8], go:"Walking to the cabinet", s:"Measuring the cabinet, twice" },
-    { spot:v3(-5.4,-2.6), face:v3(-5.4,-1.9), act:"sand", dur:[5,7], go:"Heading to the saw horses", s:"Sanding a plank on the saw horses" }
+    { spot:L("john", -1.5, 0.35), face:L("john", -2.6, 0.35), act:"lift", dur:[2.2,3], go:"Going to the lumber rack", s:"Picking a plank", carry:true },
+    { spot:L("john", 1.75, -1.2), face:L("john", 1.75, -2.2), act:"measure", dur:[5,8], go:"Walking to the cabinet", s:"Measuring the cabinet with the tape" },
+    { spot:L("john", 0.25, 0.95), face:L("john", 0.25, 1.8), act:"saw", dur:[6,9], go:"Heading to the saw horses", s:"Sawing a plank to length", saw:true },
+    { spot:L("john", -0.35, 0.95), face:L("john", -0.35, 1.8), act:"sand", dur:[5,7], go:"Heading to the saw horses", s:"Sanding a plank on the saw horses" }
   ],
   luis:[
-    { spot:v3(6.0,2.3), face:v3(6.0,1.3), act:"point", dur:[5,7], go:"Walking to the whiteboard", s:"Sketching a sitemap on the whiteboard" }
+    { spot:L("luis", 1.55, -1.3), face:L("luis", 1.55, -2.4), act:"point", dur:[5,7], go:"Walking to the whiteboard", s:"Sketching a sitemap on the whiteboard" }
   ]
 };
 var tmpPos = new V3();
@@ -1048,17 +999,10 @@ function along(w, d){
   tmpPos.lerpVectors(a, b, seg > 0 ? (d - w.cum[i - 1]) / seg : 0);
   return Math.atan2(b.x - a.x, b.z - a.z);
 }
-/* sVia: waypoints going out from the start spot; eVia: waypoints going out from the end spot */
-function buildPath(fromKey, start, sVia, toKey, end, eVia){
+/* start, its outgoing waypoints, the room hub, the end's waypoints in reverse, end */
+function buildPath(id, start, sVia, end, eVia){
   var pts = [start.clone()].concat(sVia || []);
-  if (fromKey === toKey) pts.push(PLACES[fromKey].hub);
-  else {
-    var A = PLACES[fromKey], B = PLACES[toKey];
-    pts.push(A.hub, A.doorIn, A.doorOut);
-    var dir = Math.sign(B.doorOut.x - A.doorOut.x);
-    if (dir) { var lane = dir > 0 ? 0.32 : -0.32; pts.push(v3(A.doorOut.x, lane), v3(B.doorOut.x, lane)); }
-    pts.push(B.doorOut, B.doorIn, B.hub);
-  }
+  pts.push(PLACES[id].hub);
   pts = pts.concat((eVia || []).slice().reverse());
   pts.push(end.clone());
   return makePath(pts);
@@ -1109,6 +1053,9 @@ var ACTS = {
   plane:{ Spine1:[0, 1, 0.38], LeftArm:[0.1, -0.55, 0.85], LeftForeArm:[-0.05, -0.35, 1], RightArm:[-0.1, -0.55, 0.85], RightForeArm:[0.05, -0.35, 1], Head:[0, 1, 0.55] },
   sand:{ Spine1:[0, 1, 0.3], RightArm:[-0.15, -0.6, 0.8], RightForeArm:[0, -0.45, 1], LeftArm:[0.2, -0.6, 0.7], LeftForeArm:[-0.1, -0.5, 1], Head:[0, 1, 0.55] },
   hammer:{ Spine1:[0, 1, 0.25], RightArm:[-0.25, -0.15, 0.75], RightForeArm:[0.1, 0.2, 1], LeftArm:[0.15, -0.65, 0.75], LeftForeArm:[-0.05, -0.55, 1], Head:[0, 1, 0.6] },
+  saw:{ Spine1:[0, 1, 0.42], RightArm:[-0.12, -0.7, 0.7], RightForeArm:[0, -0.6, 1], LeftArm:[0.3, -0.75, 0.55], LeftForeArm:[-0.1, -0.8, 0.7], Head:[0, 1, 0.65] },
+  chisel:{ Spine1:[0, 1, 0.32], RightArm:[-0.1, -0.5, 0.85], RightForeArm:[0.05, -0.25, 1], LeftArm:[0.12, -0.5, 0.85], LeftForeArm:[-0.08, -0.25, 1], Head:[0, 1, 0.6] },
+  text:{ LeftArm:[0.15, -0.85, 0.4], LeftForeArm:[-0.3, 0.5, 1], RightArm:[-0.15, -0.85, 0.4], RightForeArm:[0.3, 0.5, 1], Head:[0, 1, 0.55] },
   measure:{ Spine1:[0, 1, 0.25], LeftArm:[0.6, -0.55, 0.65], LeftForeArm:[-0.1, -0.2, 1], RightArm:[-0.6, -0.55, 0.65], RightForeArm:[0.1, -0.2, 1], Head:[0, 1, 0.5] },
   wipe:{ RightArm:[-0.35, 0.2, 0.6], RightForeArm:[0.65, 0.8, 0.15], Head:[0, 1, -0.1] },
   nap:{ Spine1:[0, 0.65, 1], Spine2:[0, 0.45, 1], Head:[0.25, 0.1, 1], LeftArm:[0.35, -0.25, 1], LeftForeArm:[-1, 0, 0.25], RightArm:[-0.35, -0.25, 1], RightForeArm:[1, 0, 0.25] },
@@ -1116,7 +1063,7 @@ var ACTS = {
   celebrate:{ LeftArm:[0.5, 1, 0.1], LeftForeArm:[0.2, 1, 0], RightArm:[-0.5, 1, 0.1], RightForeArm:[-0.2, 1, 0], Head:[0, 1, -0.2] },
   turn:{}
 };
-var ITEM_OF = { read:"paper", sort:"folder", print:"paper", file:"folder", deskPhone:"phone", hammer:"hammer", phone:"phone" };
+var ITEM_OF = { read:"paper", sort:"folder", print:"paper", file:"folder", deskPhone:"phone", hammer:"hammer", phone:"phone", text:"phone", saw:"saw", plane:"plane", sand:"sander", measure:"tape", chisel:"chisel" };
 var _a = new V3(), _b = new V3(), _d = new V3(), _t = new V3(), _q = new T.Quaternion(), _wq = new T.Quaternion(), _pq = new T.Quaternion(), _rq = new T.Quaternion(), UP = new V3(0, 1, 0);
 var _dir = [0, 0, 0];
 function aim(bone, child, dir, w, rq){
@@ -1207,46 +1154,80 @@ function clothMat(sheen){
   var k = "c" + sheen;
   return CLOTH[k] || (CLOTH[k] = new T.MeshPhysicalMaterial({ vertexColors:true, roughness:0.88, metalness:0, roughnessMap:fabricTex, sheen:sheen, sheenRoughness:0.6, sheenColor:new T.Color(0xffffff), envMapIntensity:0.45 }));
 }
-function dress(p, body){
-  var sleeveEnd = p.rolled ? 0.5 : (p.sleeves ? 0.7 : 0.36);
+function dress(p, body, isJoint){
+  var sleeveEnd = p.rolled ? 0.5 : (p.sleeves ? 0.72 : 0.38);
   var cShirt = new T.Color(p.shirt), cJacket = p.jacket ? new T.Color(p.jacket) : null, cPants = new T.Color(p.pants), cShoe = new T.Color(p.shoes);
-  var dark = new T.Color("#000000");
-  /* shirt or blouse, with a jacket over it for Doriana and a flannel check for John */
-  garment(body, function(x, y){ var ax = Math.abs(x); return y > 0.9 && y < 1.53 && ax < sleeveEnd && !(y > 1.47 && ax < 0.06); }, function(x, y, z){ return 0.009 + (Math.abs(x) < 0.2 && y < 1.0 ? 0.006 : 0); }, function(x, y, z, out){
+  var dark = new T.Color("#000000"), tmp = new T.Color();
+  var extra = isJoint ? 0.006 : 0;
+  /* shirt or blouse: loose torso, wider sleeves, a hem that hangs over the waistband */
+  garment(body, function(x, y){ var ax = Math.abs(x); return y > 0.86 && y < 1.53 && ax < sleeveEnd && !(y > 1.47 && ax < 0.06); }, function(x, y, z){
+    var ax = Math.abs(x);
+    if (ax > 0.22) return 0.024 + extra + (ax - 0.22) * 0.02;
+    return 0.022 + extra + (y < 1.05 ? (1.05 - y) * 0.12 : 0) + (z > 0 && y > 1.2 && y < 1.4 ? 0.006 : 0);
+  }, function(x, y, z, out){
     var ax = Math.abs(x);
     out.copy(cShirt);
-    if (cJacket && !(ax < 0.075 && z > 0 && y > 1.12)) out.copy(cJacket);
-    if (p.plaid) { var s = (Math.floor((x + 1) * 26) % 4 === 0 ? 0.72 : 1) * (Math.floor(y * 26) % 4 === 0 ? 0.72 : 1); out.multiplyScalar(s); if (Math.floor(y * 26) % 8 === 2) out.lerp(dark, 0.25); }
-    if (!cJacket && ax < 0.012 && z > 0 && y < 1.45) out.multiplyScalar(0.82);
-    if (ax > sleeveEnd - 0.04 && ax < sleeveEnd) out.multiplyScalar(0.86);
+    if (cJacket && !(ax < 0.075 && z > 0 && y > 1.1)) out.copy(cJacket);
+    if (p.plaid) { var sc = (Math.floor((x + 1) * 24) % 4 === 0 ? 0.7 : 1) * (Math.floor(y * 24) % 4 === 0 ? 0.7 : 1); out.multiplyScalar(sc); if (Math.floor(y * 24) % 8 === 2) out.lerp(dark, 0.22); }
+    if (!cJacket && ax < 0.01 && z > 0 && y < 1.45 && y > 0.9) out.multiplyScalar(0.8);
+    if (y < 0.9 || (ax > sleeveEnd - 0.035 && ax < sleeveEnd)) out.multiplyScalar(0.84);
   }, clothMat(0.6));
-  /* trousers */
-  garment(body, function(x, y){ return y > 0.1 && y < 1.02 && Math.abs(x) < 0.32; }, function(x, y){ return y > 0.95 ? 0.012 : 0.007; }, function(x, y, z, out){
+  /* trousers: wider than the legs, flaring a little and breaking over the shoes */
+  garment(body, function(x, y){ return y > 0.07 && y < 1.0 && Math.abs(x) < 0.32; }, function(x, y){
+    return 0.016 + extra + (y > 0.92 ? 0.004 : 0) + (y < 0.55 ? (0.55 - y) * 0.035 : 0) + (y < 0.16 ? 0.012 : 0);
+  }, function(x, y, z, out){
     out.copy(cPants);
-    if (p.id === "john") out.multiplyScalar(0.85 + 0.15 * ((Math.floor(y * 90) % 2)));
-    if (y > 0.96) out.copy(new T.Color(p.id === "doriana" ? "#2b2833" : "#3a2a1e"));
+    if (p.id === "john") out.multiplyScalar(0.86 + 0.14 * (Math.floor(y * 90) % 2));
+    if (y > 0.95) out.copy(tmp.set(p.id === "doriana" ? "#2b2833" : "#3a2a1e"));
+    if (y < 0.1) out.multiplyScalar(0.8);
   }, clothMat(0.4));
   /* shoes or boots */
-  garment(body, function(x, y){ return y < (p.id === "john" ? 0.2 : 0.13); }, 0.008, function(x, y, z, out){ out.copy(cShoe); if (y < 0.025) out.copy(p.id === "luis" ? new T.Color("#d9d6cf") : new T.Color("#141414")); }, M("#ffffff", { vertexColors:true, roughness:0.45 }));
+  if (!isJoint) garment(body, function(x, y){ return y < (p.id === "john" ? 0.2 : 0.12); }, function(x, y){ return 0.012 + (y < 0.03 ? 0.004 : 0); }, function(x, y, z, out){ out.copy(cShoe); if (y < 0.025) out.copy(tmp.set(p.id === "luis" ? "#d9d6cf" : "#141414")); }, M("#ffffff", { vertexColors:true, roughness:0.45 }));
+  /* only the exposed parts of the body are drawn: head, neck, forearms and hands */
+  var cSkin = new T.Color(p.skin);
+  garment(body, function(x, y){ return y > 1.45 || Math.abs(x) > sleeveEnd - 0.03; }, 0, function(x, y, z, out){ out.copy(cSkin); }, body.material);
+  body.visible = false;
   /* John's work apron */
-  if (p.apron) {
+  if (p.apron && !isJoint) {
     var cA = new T.Color(p.apron);
-    garment(body, function(x, y, z){ return z > 0.02 && y > 0.55 && y < 1.4 && Math.abs(x) < 0.19; }, 0.03, function(x, y, z, out){ out.copy(cA); if (y > 1.0 && y < 1.08 && Math.abs(x) < 0.1) out.multiplyScalar(0.8); }, clothMat(0.2));
+    garment(body, function(x, y, z){ return z > 0.02 && y > 0.5 && y < 1.42 && Math.abs(x) < 0.2; }, 0.05, function(x, y, z, out){ out.copy(cA); if (y > 1.0 && y < 1.08 && Math.abs(x) < 0.12) out.multiplyScalar(0.78); if (y < 0.55) out.multiplyScalar(0.85); }, clothMat(0.2));
   }
 }
-
 /* head attachments, modelled in bind-pose space and re-parented to the Head bone */
 function buildHead(p, model, head, spine2){
   var g = new T.Group(); model.add(g);
   var hm = new T.MeshPhysicalMaterial({ color:p.hair, roughness:0.48, sheen:0.7, sheenRoughness:0.45, sheenColor:new T.Color(p.hair).offsetHSL(0, 0, 0.22), envMapIntensity:0.55 });
   add(G.hcap2, hm, 0.097, 0.114, 0.137, 0, 1.709, -0.008, g).rotation.x = -0.42;
   if (p.style === "short") {
-    add(G.hsph, hm, 0.09, 0.04, 0.12, 0, 1.785, 0.012, g);
+    if (!p.cap) add(G.hsph, hm, 0.09, 0.04, 0.12, 0, 1.785, 0.012, g);
   } else {
     add(G.hsph, hm, 0.104, 0.1, 0.124, 0, 1.68, -0.03, g);
     add(G.hsph, hm, 0.09, 0.042, 0.12, 0, 1.785, 0.01, g);
     add(G.hsph, hm, 0.1, 0.23, 0.06, 0, 1.53, -0.09, g).rotation.x = 0.12;
     [-1, 1].forEach(function(s){ add(G.hsph, hm, 0.028, 0.14, 0.05, s * 0.088, 1.59, 0.005, g); });
+  }
+  /* face: eyes that blink, brows, nose, cheeks and a mouth that smiles, frowns and moves when talking */
+  var skinC = new T.Color(p.skin);
+  var eyeM = M("#15171b", { roughness:0.25 }), browM = M(p.hair, { roughness:0.8 }), lipM = M("#" + skinC.clone().lerp(new T.Color("#8a3b33"), 0.45).getHexString(), { roughness:0.6 });
+  var noseM = M("#" + skinC.clone().multiplyScalar(0.94).getHexString(), { roughness:0.62 }), cheekM = new T.MeshStandardMaterial({ color:0xe0806a, roughness:0.7, transparent:true, opacity:0, depthWrite:false });
+  var F = { eyes:[], brows:[], cheeks:[] };
+  [-1, 1].forEach(function(s){
+    var e = add(G.lowSph, eyeM, 0.0105, 0.012, 0.006, s * 0.034, 1.668, 0.117, g, false); F.eyes.push(e);
+    var b = add(G.box, browM, 0.032, 0.0065, 0.008, s * 0.035, 1.692, 0.116, g, false); b.userData.s = s; F.brows.push(b);
+    var ck = add(G.lowSph, cheekM, 0.02, 0.012, 0.004, s * 0.052, 1.638, 0.104, g, false); F.cheeks.push(ck);
+  });
+  add(G.lowSph, noseM, 0.012, 0.018, 0.012, 0, 1.646, 0.124, g, false);
+  F.smile = add(G.mouthArc, lipM, 1, 1, 1, 0, 1.618, 0.112, g, false); F.smile.rotation.z = Math.PI;
+  F.frown = add(G.mouthArc, lipM, 0.8, 0.8, 1, 0, 1.612, 0.112, g, false);
+  F.flat = add(G.box, lipM, 0.034, 0.005, 0.006, 0, 1.616, 0.112, g, false);
+  F.open = add(G.lowSph, M("#4a1f1c", { roughness:0.5 }), 0.016, 0.01, 0.006, 0, 1.613, 0.111, g, false);
+  F.blinkAt = rand(1, 4); F.cheekMat = cheekM;
+  p.face = F;
+  if (p.cap) {
+    var capM = M(p.cap, { roughness:0.75 });
+    var crown = add(G.hcap2, capM, 0.106, 0.092, 0.145, 0, 1.728, -0.004, g); crown.rotation.x = -0.18;
+    var brim = add(G.cyl, capM, 0.085, 0.008, 0.075, 0, 1.742, 0.118, g); brim.rotation.x = -0.14;
+    add(G.sph, M("#f2efe9"), 0.012, 0.008, 0.012, 0, 1.823, -0.01, g, false);
   }
   if (p.beard) {
     var bm = new T.MeshPhysicalMaterial({ color:new T.Color(p.hair).offsetHSL(0, 0, -0.04), roughness:0.75, sheen:0.4, envMapIntensity:0.4 });
@@ -1320,6 +1301,20 @@ function buildProps(p, model, hand){
   add(G.cyl, M("#7a4a26"), 0.012, 0.26, 0.012, 0, 0, 0.06, hmG, false).rotation.x = Math.PI / 2;
   add(G.box, M("#9aa3ad", { metalness:0.8, roughness:0.3 }), 0.035, 0.1, 0.035, 0, 0, 0.18, hmG, false);
   it.hammer = hmG;
+  var steelM = M("#9aa3ad", { metalness:0.8, roughness:0.3 }), woodH = M("#7a4a26");
+  var sawG = new T.Group(); sawG.position.set(X - 0.02, Y, Z); g.add(sawG);
+  add(G.box, woodH, 0.03, 0.1, 0.1, 0, 0, 0.02, sawG, false); add(G.box, steelM, 0.004, 0.11, 0.42, 0, -0.03, 0.28, sawG, false);
+  it.saw = sawG;
+  var plG = new T.Group(); plG.position.set(X - 0.02, Y - 0.05, Z); g.add(plG);
+  add(G.box, M("#5b6168", { metalness:0.6, roughness:0.35 }), 0.07, 0.06, 0.24, 0, 0, 0.04, plG, false); add(G.sph, woodH, 0.025, 0.03, 0.025, 0, 0.045, 0.1, plG, false);
+  it.plane = plG;
+  it.sander = add(G.box, M("#c8372d", { roughness:0.6 }), 0.08, 0.045, 0.13, X - 0.02, Y - 0.035, Z, g, false);
+  var tpG = new T.Group(); tpG.position.set(X - 0.02, Y, Z); g.add(tpG);
+  add(G.cyl, M("#f2c230", { roughness:0.4 }), 0.04, 0.03, 0.04, 0, 0, 0, tpG, false).rotation.z = Math.PI / 2; add(G.box, M("#f7e08a"), 0.004, 0.012, 0.3, 0.0, -0.02, 0.17, tpG, false);
+  it.tape = tpG;
+  var chG = new T.Group(); chG.position.set(X - 0.02, Y, Z); g.add(chG);
+  add(G.cyl, woodH, 0.014, 0.1, 0.014, 0, 0, 0.03, chG, false).rotation.x = Math.PI / 2; add(G.box, steelM, 0.018, 0.004, 0.12, 0, 0, 0.14, chG, false);
+  it.chisel = chG;
   Object.keys(it).forEach(function(k){ it[k].visible = false; });
   p.items = it; p.itemShown = null;
   model.updateMatrixWorld(true);
@@ -1343,18 +1338,19 @@ function makeRig(p){
   var model = SkeletonUtils.clone(GLTF.scene);
   model.scale.setScalar(CH_SCALE);
   root.add(model);
-  var body = null;
+  var body = null, joints = null;
   model.traverse(function(o){
     if (o.isSkinnedMesh) {
-      colorBody(o, p, o.name.indexOf("Joints") >= 0 ? 0.82 : 1);
+      colorBody(o, p, 1);
       o.castShadow = true; o.receiveShadow = true; o.frustumCulled = false;
-      if (o.name.indexOf("Surface") >= 0) body = o;
+      if (o.name.indexOf("Surface") >= 0) body = o; else joints = o;
     }
   });
   var b = {};
   BONE_NAMES.forEach(function(n){ b[n] = model.getObjectByName("mixamorig" + n); });
   root.updateMatrixWorld(true);
-  if (body) dress(p, body);
+  if (body) dress(p, body, false);
+  if (joints) dress(p, joints, true);
   buildHead(p, model, b.Head, b.Spine2);
   var mixer = new T.AnimationMixer(model);
   var idle = mixer.clipAction(CLIPS.idle), walk = mixer.clipAction(CLIPS.walk), nod = mixer.clipAction(CLIPS.agree);
@@ -1426,6 +1422,9 @@ function updateRig(p, t, dt){
         if (a.n === "wave" && n === "RightForeArm") _dir[0] += 0.45 * Math.sin(t * 9);
         else if ((a.n === "talk" || a.n === "answer" || a.n === "call") && n === "RightForeArm") { _dir[0] += 0.15 * Math.sin(t * 4.3); _dir[1] += 0.22 * Math.sin(t * 3.1); }
         else if (a.n === "plane") { var s = Math.sin(t * 2.4); if (n === "Spine1") _dir[2] += 0.14 * s; if (n === "LeftArm" || n === "RightArm") _dir[2] += 0.35 * s; }
+        else if (a.n === "saw" && (n === "RightArm" || n === "RightForeArm")) { var sw2 = Math.sin(t * 5.5); _dir[2] += (n === "RightArm" ? 0.45 : 0.3) * sw2; _dir[1] += 0.12 * sw2; }
+        else if (a.n === "chisel" && (n === "RightArm" || n === "LeftArm")) _dir[2] += 0.18 * Math.max(0, Math.sin(t * 3.2));
+        else if (a.n === "text" && (n === "LeftForeArm" || n === "RightForeArm")) _dir[1] += 0.04 * Math.sin(t * 14 + (n === "LeftForeArm" ? 0 : 1.6));
         else if (a.n === "sand" && n === "RightForeArm") { _dir[0] += 0.35 * Math.cos(t * 6); _dir[2] += 0.25 * Math.sin(t * 6); }
         else if (a.n === "hammer" && n === "RightForeArm") { var hp = (t * 1.5) % 1, up = hp < 0.72 ? ease(hp / 0.72) : 1 - ease((hp - 0.72) / 0.12); _dir[1] = -0.55 + 1.7 * up; _dir[2] = 1 - 0.7 * up; }
         else if ((a.n === "eat" || a.n === "sip") && n === "RightForeArm") { var kk = 0.5 + 0.5 * Math.sin(t * (a.n === "eat" ? 2.4 : 1.4)); _dir[1] = 0.15 + 0.75 * kk; _dir[2] = 0.9 - 0.65 * kk; }
@@ -1499,7 +1498,7 @@ var POOLS = {
 var WORK = {
   doriana:[ { n:"read", d:[7,12], s:"Reading through a deal file" }, { n:"sort", d:[4,7], s:"Sorting credit applications" }, { n:"type", d:[5,9], s:"Typing up a summary for the manager" }, { n:"deskPhone", d:[5,8], s:"Booking an appointment" }, { n:"read", d:[6,10], s:"Checking a contract for signatures" } ],
   angeles:[ { n:"call", d:[14,26], s:"On a call with a customer" }, { n:"type", d:[5,9], s:"Typing up a ticket" }, { n:"call", d:[12,22], s:"Helping a caller" }, { n:"type", d:[4,7], s:"Updating customer notes" } ],
-  john:[ { n:"plane", d:[6,10], s:"Planing a board" }, { n:"sand", d:[6,9], s:"Sanding a cabinet door" }, { n:"hammer", d:[4,7], s:"Tapping a joint together" }, { n:"measure", d:[4,6], s:"Measuring twice" } ],
+  john:[ { n:"plane", d:[6,10], s:"Planing a board" }, { n:"sand", d:[6,9], s:"Sanding a cabinet door" }, { n:"hammer", d:[5,8], s:"Hammering a joint together" }, { n:"measure", d:[4,6], s:"Measuring twice with the tape" }, { n:"chisel", d:[5,8], s:"Chiselling a mortise" } ],
   luis:[ { n:"type", d:[8,14], s:"Building a product page" }, { n:"type", d:[6,10], s:"Fixing a layout" }, { n:"type", d:[6,10], s:"Checking the site on the second screen" }, { n:"type", d:[5,8], s:"Optimising images" } ]
 };
 var ACT_TEXT = {
@@ -1640,11 +1639,56 @@ function showBubble(p, text){
   } else if (p.bubbleOn) { p.bubbleOn = false; p.bubble.classList.remove("show"); }
 }
 
+/* ---------- texting: the four never meet in person, they keep in touch by phone ---------- */
+var TEXTS = {
+  doriana:["The printer ate another contract","Lunch break soon?","Forty folders filed before ten!","The boss wants it all by four","Found the missing signature!"],
+  angeles:["Twenty calls before lunch!","Hold music is stuck in my head again","Closed a tough ticket, happy customer","Quick break, how's your day?","Deep breath, smile, next call"],
+  john:["Cabinet box is glued up!","Measure twice, cut once. Still true.","Covered in sawdust, as usual","Just finished sanding a door","That dovetail closed up perfect"],
+  luis:["New page is live!","Fixed that broken link","Site speed looking great today","Headphones off for a minute, what's new?","Pushed the update, all good"]
+};
+var REPLIES = {
+  doriana:["Ha! Same chaos here","Love it. Back to my files","Nice! Talk later","Ha, the printer would agree"],
+  angeles:["Haha, hang in there!","Yay! Proud of you","Reading this between calls, love it","Smiling at my desk now"],
+  john:["Nice one","Sawdust says hi","Good stuff, back to the bench","Ha! Same here"],
+  luis:["Nice!","Haha, reading this between deploys","Love it","Ha, good one"]
+};
+var pings = [];
+function sendText(a, b, t, line, isReply){
+  line = line || choose(TEXTS[a.id]);
+  startAct(a, "text", t, 3.2, null, { label:(isReply ? "Replying to " : "Texting ") + b.name, item:"phone" });
+  say(a, "\u{1F4F1} " + line, 3.4);
+  var el = document.createElement("div"); el.className = "ping"; el.setAttribute("aria-hidden", "true"); el.textContent = "✉️"; el.hidden = true;
+  labelsEl.appendChild(el);
+  pings.push({ a:a, b:b, t0:t + 2.4, dur:1.7, el:el, line:line, reply:isReply });
+  a.lastText = { to:b.name, line:line, t:t };
+  a.needs.social = 0;
+  bumpCare(a.care, "mood", 0.02);
+}
+var _pa = new V3(), _pb = new V3();
+function updatePings(t, w, h){
+  for (var i = pings.length - 1; i >= 0; i--) {
+    var pg = pings[i], u = (t - pg.t0) / pg.dur;
+    if (u < 0) continue;
+    if (u >= 1) {
+      pg.el.remove(); pings.splice(i, 1);
+      var b = pg.b;
+      say(b, "\u{1F514} Text from " + pg.a.name, 2.2);
+      b.inbox = { from:pg.a, line:pg.line, reply:pg.reply, at:t + rand(1.2, 2.4) };
+      b.lastText = { from:pg.a.name, line:pg.line, t:t };
+      moodShift(b, 0.06, pg.a.name + " texted me");
+      continue;
+    }
+    pg.a.head.getWorldPosition(_pa); _pa.y += 0.45; _pa.project(camera);
+    pg.b.head.getWorldPosition(_pb); _pb.y += 0.45; _pb.project(camera);
+    var k = ease(u), x = lerp(_pa.x, _pb.x, k), y = lerp(_pa.y, _pb.y, k) + Math.sin(u * Math.PI) * 0.18;
+    pg.el.hidden = false;
+    pg.el.style.transform = "translate(" + ((x + 1) / 2 * w).toFixed(1) + "px," + ((1 - y) / 2 * h).toFixed(1) + "px) translate(-50%,-50%) scale(" + (0.8 + 0.4 * Math.sin(u * Math.PI)).toFixed(2) + ")";
+  }
+}
+
 /* ---------- decisions ---------- */
 function busyAct(q){ return q.act && (q.act.n === "nap" || q.act.n === "napStand" || q.act.n === "eat"); }
-function available(q){ return q.state === "sit" && !q.chatWith && !q.visitor && !q.answering && !busyAct(q); }
 function luisDeepWork(q){ return q.id === "luis" && q.typeOn && q.needs.focus > 0.55; }
-function coffeeTaken(){ return PEOPLE.some(function(q){ return q.trip && q.trip.kind === "coffee"; }); }
 function startWork(p, t){
   var wk = choose(WORK[p.id]), dur = rand(wk.d[0], wk.d[1]);
   p.workLabel = wk.s;
@@ -1653,20 +1697,13 @@ function startWork(p, t){
   p.needs.focus = Math.min(1, p.needs.focus + 0.12);
 }
 function decide(p, t){
-  var n = p.needs, w = p.w, c = p.care, opts = [], mv = p.mood.v;
+  var n = p.needs, w = p.w, c = p.care, opts = [];
   opts.push({ k:"work", s:0.85 * w.focus * (0.6 + n.energy * 0.6) + n.focus * 0.3 + rand(0, 0.3) });
   opts.push({ k:"micro", s:(1 - n.energy) * 0.8 * w.breaky + (c.energy < LOWLINE ? 0.2 : 0) + rand(0, 0.45) });
   if (ERRANDS[p.id].length) opts.push({ k:"errand", s:w.errand + rand(0, 0.55) });
-  if (!coffeeTaken()) opts.push({ k:"coffee", s:n.coffee * 1.2 * w.coffee + (c.water < 0.7 ? 0.25 : 0) + (c.energy < 0.6 ? 0.15 : 0) + rand(0, 0.25) });
+  opts.push({ k:"drink", s:n.coffee * 1.1 * w.coffee + (c.water < 0.7 ? 0.25 : 0) + rand(0, 0.2) });
   if (c.food < 0.62 && t - p.snackAt > 240) opts.push({ k:"snack", s:0.75 + rand(0, 0.4) });
-  var best = null, bs = -1;
-  PEOPLE.forEach(function(q){
-    if (q === p || !available(q)) return;
-    var sc = n.social * w.social * 1.3 * (1 + 0.4 * mv) + rand(0, 0.3);
-    if (luisDeepWork(q)) sc *= 0.25;
-    if (sc > bs) { bs = sc; best = q; }
-  });
-  if (best && !(p.mood.kind === "stressed" && Math.random() < 0.5)) opts.push({ k:"visit", s:bs, q:best });
+  if (n.social > 0.55 && !pings.length && t - lastTextAt > 22) opts.push({ k:"text", s:n.social * w.social * 1.4 + rand(0, 0.3) });
   opts.sort(function(a, b){ return b.s - a.s; });
   var o = opts[0];
   if (o.k === "work") startWork(p, t);
@@ -1676,31 +1713,35 @@ function decide(p, t){
     n.energy = Math.min(1, n.energy + 0.12); bumpCare(c, "energy", 0.01);
     if (nm === "sip") bumpCare(c, "water", 0.04);
   }
+  else if (o.k === "drink") {
+    startAct(p, "sip", t, 4.5, null, { item:DRINK_OF[p.id], label:"Having a " + DRINK_OF[p.id] + " break" });
+    n.coffee = 0; n.energy = Math.min(1, n.energy + 0.3); bumpCare(c, "water", 0.12); bumpCare(c, "energy", 0.04);
+    p.lastEvent = { kind:"coffee", t:t };
+  }
   else if (o.k === "snack") {
     startAct(p, "eat", t, 5, null, { item:SNACK_OF[p.id] });
     p.snackAt = t; bumpCare(c, "food", 0.12); bumpCare(c, "mood", 0.03);
   }
-  else if (o.k === "coffee") goTrip(p, t, "coffee", null, buildPath(p.id, p.seat, p.seatVia, "coffee", PLACES.coffee.spot, []), "coffee");
   else if (o.k === "errand") {
     var e = choose(ERRANDS[p.id]);
-    goTrip(p, t, "errand", null, buildPath(p.id, p.seat, p.seatVia, p.id, e.spot, e.via || []), p.id);
+    goTrip(p, t, "errand", buildPath(p.id, p.seat, p.seatVia, e.spot, e.via || []));
     p.trip.errand = e;
-  } else if (o.k === "visit") {
-    var q = o.q, V = PLACES[q.id].visit;
-    q.visitor = p;
-    goTrip(p, t, "visit", q, buildPath(p.id, p.seat, p.seatVia, q.id, V.spot, V.via), q.id);
+  } else if (o.k === "text") {
+    var others = PEOPLE.filter(function(q){ return q !== p; });
+    lastTextAt = t;
+    sendText(p, choose(others), t);
   }
 }
-function goTrip(p, t, kind, target, path, placeKey){
-  p.trip = { kind:kind, target:target, path:path, d:0, back:false, place:placeKey };
+var lastTextAt = -10;
+function goTrip(p, t, kind, path){
+  p.trip = { kind:kind, path:path, d:0, back:false };
   p.act = null; p.typeOn = false;
   setState(p, "up", t, p.stand ? 0.15 : 0.6);
 }
 function setState(p, st, t, dur){ p.state = st; p.t0 = t; p.dur = dur; }
 function startReturn(p, t){
   var tr = p.trip, from = p.root.position.clone();
-  var via = tr.kind === "visit" ? PLACES[tr.place].visit.via : (tr.errand && tr.errand.via) || [];
-  tr.path = buildPath(tr.place, from, via, p.id, p.seat, p.seatVia); tr.d = 0; tr.back = true;
+  tr.path = buildPath(p.id, from, (tr.errand && tr.errand.via) || [], p.seat, p.seatVia); tr.d = 0; tr.back = true;
   setState(p, "walk", t, 0);
 }
 
@@ -1710,10 +1751,10 @@ function updateAgent(p, t, dt){
   var n = p.needs, w = p.w, r = p.rig, c = p.care;
   n.energy = clamp(n.energy - dt * 0.004 * (p.typeOn ? 1.3 : 0.6), 0, 1);
   n.coffee = clamp(n.coffee + dt * 0.005 * w.coffee, 0, 1);
-  n.social = clamp(n.social + dt * 0.0065 * w.social, 0, 1);
+  n.social = clamp(n.social + dt * 0.006 * w.social, 0, 1);
   n.focus = clamp(n.focus + dt * (p.typeOn || (p.act && p.act.work) ? 0.01 : -0.006), 0, 1);
   decayCare(c, dt);
-  if (p.act && t - p.act.t0 > p.act.dur + 0.5) { if (p.act.n === "carry") {} else p.act = null; }
+  if (p.act && p.act.n !== "carry" && t - p.act.t0 > p.act.dur + 0.5) p.act = null;
   if (p.answering && t > p.answering) p.answering = 0;
   p.mood.v += (MOODS[p.mood.base].v + (c.mood - 0.75) * 0.6 - p.mood.v) * dt * 0.003;
   if (Math.random() < dt * 0.2) recomputeMood(p);
@@ -1725,12 +1766,14 @@ function updateAgent(p, t, dt){
   if (st === "sit") {
     p.root.position.copy(p.seat);
     r.sit = p.stand ? 0 : 1;
-    if (p.pendingCoffee && t >= p.pendingCoffee) {
-      p.pendingCoffee = 0;
-      if (!p.chatWith && !coffeeTaken()) { p.act = null; goTrip(p, t, "coffee", null, buildPath(p.id, p.seat, p.seatVia, "coffee", PLACES.coffee.spot, []), "coffee"); }
-    } else if (p.pendingNap && !p.chatWith) {
+    if (p.inbox && t >= p.inbox.at && !busyAct(p) && !p.answering) {
+      var ib = p.inbox; p.inbox = null;
+      if (!ib.reply) { var rl = choose(REPLIES[p.id]); sendText(p, ib.from, t, rl, true); }
+      else startAct(p, "text", t, 2.4, null, { label:"Reading a text from " + ib.from.name, item:"phone" });
+      p.decideAt = t + 3.5;
+    } else if (p.pendingNap && !p.answering) {
       p.pendingNap = false; startAct(p, p.stand ? "napStand" : "nap", t, 12);
-    } else if (t >= p.decideAt && (!p.act || (p.act.work && t - p.act.t0 > p.act.dur - 0.4)) && !p.chatWith && !p.visitor && !p.answering) {
+    } else if (t >= p.decideAt && (!p.act || (p.act.work && t - p.act.t0 > p.act.dur - 0.4)) && !p.answering) {
       p.decideAt = t + (p.stand ? rand(1, 2.5) : rand(3, 6));
       if (!p.act || !p.act.work || Math.random() < 0.5) decide(p, t);
     }
@@ -1738,13 +1781,10 @@ function updateAgent(p, t, dt){
       if (!p.stand && t > p.typeNext) { p.typeOn = !p.typeOn; p.typeNext = t + (p.typeOn ? rand(2, 7) : rand(0.8, 3.5)); }
       p.typeAmp = lerp(p.typeAmp, p.typeOn && !p.act && !p.stand ? 1 : 0, 1 - Math.exp(-dt * 4));
       smoothTurn(p, p.sitHeading, dt);
-      if (p.act && (p.act.n === "turn" || p.act.n === "answer") && !p.stand) {
-        var yaw = p.act.n === "answer" ? camYaw(p) + p.swivel : (p.act.target ? yawTo(p, p.act.target) + p.swivel : 0);
-        swivelTarget = clamp(yaw * 0.35, -0.6, 0.6) * bump(t - p.act.t0, 0, p.act.dur, 0.6);
-      }
+      if (p.act && p.act.n === "answer" && !p.stand) swivelTarget = clamp((camYaw(p) + p.swivel) * 0.35, -0.6, 0.6) * bump(t - p.act.t0, 0, p.act.dur, 0.6);
       p.swivel = lerp(p.swivel, swivelTarget, 1 - Math.exp(-dt * 5));
       var a = p.act;
-      p.statusNow = p.answering ? "Answering your question" : p.chatWith ? "Chatting with " + p.chatWith.name
+      p.statusNow = p.answering ? "Answering your question"
         : a && a.label ? a.label : a && ACT_TEXT[a.n] ? ACT_TEXT[a.n] : p.typeOn ? p.workLabel : p.stand ? "Taking a breather" : (p.workLabel || p.status);
       return;
     }
@@ -1766,64 +1806,32 @@ function updateAgent(p, t, dt){
   } else if (st === "walk") {
     r.sit = 0;
     var path = tr.path, rem = path.L - tr.d;
-    var want = rem > 0.04 ? clamp(rem / 0.8, 0.3, 1) : 0;
-    fwd.set(Math.sin(p.heading), 0, Math.cos(p.heading));
-    for (var i = 0; i < PEOPLE.length; i++) {
-      var q = PEOPLE[i];
-      if (q === p || q.state === "sit" || q.state === "up" || q.state === "down") continue;
-      dv.subVectors(q.root.position, p.root.position); dv.y = 0;
-      var dist = dv.length();
-      if (dist < 0.85 && dv.dot(fwd) > dist * 0.3 && (q.state !== "walk" || q.idx < p.idx)) want = Math.min(want, 0.08);
-    }
-    r.walkTarget = want;
+    r.walkTarget = rem > 0.04 ? clamp(rem / 0.8, 0.3, 1) : 0;
     tr.d = Math.min(path.L, tr.d + WALK_V * p.pace * r.walkW * dt);
     var hd = along(path, tr.d);
     p.root.position.copy(tmpPos);
     if (rem > 0.05) smoothTurn(p, hd, dt, 6);
     if (rem <= 0.04 && r.walkW < 0.25) {
       if (tr.back) setState(p, "down", t, p.stand ? 0.15 : 0.6);
-      else if (tr.kind === "coffee") {
-        setState(p, "coffee", t, rand(5, 8));
-        startAct(p, "sip", t + 1.2, 3.2, null, { item:DRINK_OF[p.id] });
-      } else if (tr.kind === "errand") {
+      else {
         var e = tr.errand;
         setState(p, "errand", t, rand(e.dur[0], e.dur[1]));
-        startAct(p, e.act, t + 0.3, p.dur - 0.4, null, { label:e.s, item:e.item });
-      } else {
-        var tq = tr.target;
-        if (tq.state === "sit" && tq.visitor === p && !tq.answering) {
-          var cd = rand(6, 10);
-          setState(p, "visit", t, cd);
-          startAct(tq, "turn", t, cd - 0.3, p);
-          startAct(p, "talk", t + 0.5, cd - 1.2);
-          startChat(p, tq, t, cd);
-        } else setState(p, "visit", t, 1.2);
+        startAct(p, e.act, t + 0.3, p.dur - 0.4, null, { label:e.s, item:e.item, saw:e.saw });
       }
     }
-  } else if (st === "visit" || st === "coffee" || st === "errand") {
+  } else if (st === "errand") {
     r.sit = 0;
-    var spot = tr.path.pts[tr.path.pts.length - 1];
+    var spot = tr.path.pts[tr.path.pts.length - 1], face = tr.errand.face;
     p.root.position.copy(spot);
-    var face = st === "visit" ? tr.target.root.position : st === "coffee" ? PLACES.coffee.face : tr.errand.face;
     smoothTurn(p, Math.atan2(face.x - spot.x, face.z - spot.z), dt, 5);
     if (k >= 1) {
-      if (st === "coffee") {
-        n.coffee = 0; n.energy = Math.min(1, n.energy + 0.4);
-        bumpCare(c, "water", 0.15); bumpCare(c, "energy", 0.05);
-        moodShift(p, p.mood.kind === "tired" ? 0.2 : 0.1, "the " + DRINK_OF[p.id] + " helped");
-        p.lastEvent = { kind:"coffee", t:t };
-      }
-      if (st === "errand" && tr.errand.care) Object.keys(tr.errand.care).forEach(function(kk){ bumpCare(c, kk, tr.errand.care[kk]); });
-      if (st === "errand" && tr.errand.carry) { p.carrying = true; startAct(p, "carry", t, 999, null, { label:"Carrying a plank to the bench" }); }
-      if (st === "visit" && tr.target.visitor === p) tr.target.visitor = null;
+      if (tr.errand.care) Object.keys(tr.errand.care).forEach(function(kk){ bumpCare(c, kk, tr.errand.care[kk]); });
+      if (tr.errand.carry) { p.carrying = true; startAct(p, "carry", t, 999, null, { label:"Carrying a plank to the bench" }); }
       startReturn(p, t);
     }
   }
-  var kind = p.trip ? p.trip.kind : "";
   if (p.carrying) p.statusNow = "Carrying a plank to the bench";
-  else if (kind === "coffee") p.statusNow = p.trip.back ? "Back with a " + DRINK_OF[p.id] : p.state === "coffee" ? "Having a " + DRINK_OF[p.id] + " at the coffee bar" : "Getting a " + DRINK_OF[p.id];
-  else if (kind === "errand") p.statusNow = p.state === "errand" ? p.trip.errand.s : p.trip.back ? "Heading back" : p.trip.errand.go;
-  else if (kind === "visit") p.statusNow = p.state === "visit" ? "Visiting " + p.trip.target.name : (p.trip.back ? "Walking back to " + (p.stand ? "the bench" : "the desk") : "Walking over to see " + p.trip.target.name);
+  else if (p.trip) p.statusNow = p.state === "errand" ? p.trip.errand.s : p.trip.back ? "Heading back" : p.trip.errand.go;
 }
 
 /* ---------- camera: orthographic isometric ---------- */
@@ -1832,7 +1840,7 @@ var view = { tx:0, ty:0.8, tz:0, r:10, th:ISO_TH + 0.25, ph:ISO_PH };
 var goal = { tx:0, ty:0.8, tz:0, r:10, th:ISO_TH, ph:ISO_PH };
 var focus = null, dragging = false, lastInteract = -10, aspect = 1;
 var camDir = new V3(), camRight = new V3(), camUp = new V3(), corner = new V3();
-var BOUNDS = { x0:-7.4, x1:7.4, y1:2.8, z0:-7.4, z1:7.4 };
+var BOUNDS = { x0:-5.05, x1:5.05, y1:2.8, z0:-5.05, z1:5.05 };
 function basis(th, ph){
   camDir.set(Math.sin(ph) * Math.sin(th), Math.cos(ph), Math.sin(ph) * Math.cos(th));
   camRight.set(Math.cos(th), 0, -Math.sin(th));
@@ -3044,7 +3052,7 @@ function stem(w){
   else if (/ed$/.test(w) && w.length > 4) w = w.slice(0, -2);
   else if (/(sh|ch|x|z|ss)es$/.test(w)) w = w.slice(0, -2);
   else if (/s$/.test(w) && !/ss$/.test(w)) w = w.slice(0, -1);
-  if (/([^aeiouls])\1$/.test(w) && w.length > 4) w = w.slice(0, -1);
+  if (/([^aeiouls])\1$/.test(w) && w.length > 3) w = w.slice(0, -1);
   if (/e$/.test(w) && w.length > 3) w = w.slice(0, -1);
   return w;
 }
@@ -3073,7 +3081,7 @@ function tokEq(a, b){
   if (L >= 5) return lev(a, b, 1) <= 1;
   return false;
 }
-function prep(text){ var raw = normText(text); return { raw:raw, st:raw.map(stem), str:" " + raw.join(" ") + " " }; }
+function prep(text){ var raw = normText(text); return { raw:raw, st:raw.map(stem), str:" " + raw.join(" ") + " ", j:raw.join(" ") }; }
 /* compiled phrases: arrays of stemmed tokens */
 function compile(ph){ return normText(ph).map(stem); }
 /* match a phrase in order, allowing one extra word between its tokens; returns matched token indexes or null */
@@ -3122,7 +3130,11 @@ function topicScore(I, inp){
   I.topics.forEach(function(T0){
     if (T0.qn === joined) { if (100 > bs) { bs = 100; best = T0.tp; } return; }
     var top = 0, sum = 0;
-    T0.phs.forEach(function(ph){ var s = phraseScore(inp, ph, I.idf); if (s > top) { sum += top; top = s; } else sum += s; });
+    T0.phs.forEach(function(ph){
+      var s = phraseScore(inp, ph, I.idf);
+      if (!s && ph.length > 1) { for (var a = 0; a < ph.length; a++) { if (STOP[ph[a]]) continue; for (var b = 0; b < inp.st.length; b++) if (tokEq(inp.st[b], ph[a])) { s += tokW(ph[a], I.idf) * 0.5; break; } } }
+      if (s > top) { sum += top; top = s; } else sum += s;
+    });
     var qo = 0;
     T0.qt.forEach(function(w){ for (var i = 0; i < inp.st.length; i++) if (tokEq(inp.st[i], w)) { qo += tokW(w, I.idf) * 0.45; break; } });
     var sc = top + 0.3 * sum + qo;
@@ -3229,33 +3241,24 @@ function personIn(inp, self){
 function doingNow(p){
   var tr = p.trip, t = clock.elapsedTime;
   if (p.carrying) return "Carrying a plank over to the bench";
-  if (tr) {
-    if (tr.kind === "coffee") return tr.back ? "Walking back with my " + DRINK_OF[p.id] : "Grabbing a " + DRINK_OF[p.id] + ", back in a sec";
-    if (tr.kind === "visit") return tr.back ? "Heading back to my " + (p.stand ? "bench" : "desk") : (p.state === "visit" ? "Chatting with " + tr.target.name : "On my way to see " + tr.target.name);
-    if (tr.kind === "errand") return p.state === "errand" ? tr.errand.s : tr.errand.go;
-  }
-  if (p.chatWith) return "Chatting with " + p.chatWith.name;
+  if (tr) return p.state === "errand" ? tr.errand.s : tr.back ? "Heading back to my " + (p.stand ? "bench" : "desk") : tr.errand.go;
   var a = p.act;
   if (a && a.label) return a.label;
   if (a && a.n === "eat") return "Having a little snack";
   if (a && a.n === "sip") return "Having a sip of " + DRINK_OF[p.id];
   if (a && ACT_TEXT[a.n]) return ACT_TEXT[a.n];
-  if (p.lastEvent && p.lastEvent.kind === "coffee" && t - p.lastEvent.t < 25) return "Just got back with a " + DRINK_OF[p.id];
   return p.workLabel || p.status;
 }
 function roomOf(q){ return { john:"the workshop", doriana:"the back office", angeles:"the customer care room", luis:"the web studio" }[q.id]; }
 function locate(q){
-  var P = cap(q.pron), tr = q.trip;
-  if (tr && tr.kind === "coffee") return P + " is at the coffee bar at the end of the hallway.";
-  if (tr && tr.kind === "visit") return q.state === "visit" ? P + " is over in " + roomOf(tr.target) + ", visiting " + tr.target.name + "." : P + " is walking over to see " + tr.target.name + ".";
-  if (q.chatWith) return P + " is in " + roomOf(q) + ", chatting with " + q.chatWith.name + ".";
-  return P + " is in " + roomOf(q) + ". " + doingNow(q) + ".";
+  var P = cap(q.pron);
+  return P + "'s at " + poss(q) + " own workplace, in " + roomOf(q) + ". " + doingNow(q) + "." + (q.lastText && clock.elapsedTime - q.lastText.t < 120 ? " We texted a bit ago." : "");
 }
 var FRIEND = {
   doriana:"the most organized person I know. Every file, every signature, always in place",
   angeles:"calm on every call. Honestly, nobody handles a tricky caller like she does",
   john:"great with his hands. That cabinet he's building is going to be beautiful",
-  luis:"always deep in the websites. Headphones on means he's building something"
+  luis:"always deep in the websites. Headphones on means he's building something. He texts back fast, though"
 };
 function howReply(p){
   var n = p.needs, m = p.mood.kind, bits = [fresh(p, OPEN[m])], why = p.moodWhy, low = lowest(p), t = clock.elapsedTime;
@@ -3312,12 +3315,12 @@ function converse(p, raw){
   var I = KBI[p.id], ts = I ? topicScore(I, inp) : { tp:null, s:0 };
   var it = intentScore(inp);
   if (short && ts.s < 2.4) {
-    if (FOLLOW.ex.test(inp.str) && lastTopic) return { text:topicReply(p, lastTopic, "ex"), intent:"topic", reason:"" };
-    if (FOLLOW.why.test(inp.str)) {
+    if (FOLLOW.ex.test(inp.j) && lastTopic) return { text:topicReply(p, lastTopic, "ex"), intent:"topic", reason:"" };
+    if (FOLLOW.why.test(inp.j)) {
       if (lastTopic) return { text:topicReply(p, lastTopic, "why"), intent:"topic", reason:"" };
       if (last && last.reason) return { text:fresh(p, ["Well, ","Honestly, ","Mostly because "]) + last.reason + ".", intent:"why", reason:"" };
     }
-    if (FOLLOW.more.test(inp.str) && lastTopic && it.s < 3) return { text:topicReply(p, lastTopic, "more"), intent:"topic", reason:"" };
+    if (FOLLOW.more.test(inp.j) && lastTopic && it.s < 3) return { text:topicReply(p, lastTopic, "more"), intent:"topic", reason:"" };
   }
   /* 4. someone else knows this much better */
   var other = null, os = 0;
@@ -3357,7 +3360,7 @@ function converse(p, raw){
       return { text:fresh(p, ["Nope, I'm good, thanks!","I just ate, I'm all set.","Not right now, thanks for asking."]), intent:"hungry", reason:"I had something not long ago" };
     case "thirsty":
       if (c.water < LOWLINE) return { text:fresh(p, ["Yes please, I'm parched.","So thirsty. Anything would do.","Honestly, a drink would be perfect right now."]), intent:"thirsty", reason:"I haven't had a drink in a while" };
-      if (p.needs.coffee > 0.5 && !coffeeTaken() && p.state === "sit" && !p.chatWith) { p.pendingCoffee = t + 2.5; return { text:fresh(p, ["Oh, you read my mind. Heading to the coffee bar now.","Yes! I'll grab a " + DRINK_OF[p.id] + " right now."]), intent:"thirsty", reason:"I haven't had one in a while" }; }
+      if (p.needs.coffee > 0.5 && p.state === "sit" && !busyAct(p)) { p.needs.coffee = 0; startAct(p, "sip", t + 1.5, 4, null, { item:DRINK_OF[p.id], label:"Having a " + DRINK_OF[p.id] }); bumpCare(c, "water", 0.08); return { text:fresh(p, ["Oh, you read my mind. Let me pour a " + DRINK_OF[p.id] + ".","Yes! I'll have a " + DRINK_OF[p.id] + " right now."]), intent:"thirsty", reason:"I haven't had one in a while" }; }
       return { text:fresh(p, ["I'm good for now, thanks!","Just had something, but thank you.","Maybe later, thanks."]), intent:"thirsty", reason:"I had one not long ago" };
     case "tired":
       if (c.energy < LOWLINE) return { text:fresh(p, ["Honestly, yes. A short break would be nice.","A bit. I could use a power nap.","Getting there. Long stretch today."]), intent:"tired", reason:"it's been a while without a break" };
@@ -3365,7 +3368,7 @@ function converse(p, raw){
     case "where":
       var q = personIn(inp, p);
       if (q === "boss") return { text:fresh(p, ["The boss? In the office behind that door, probably on the phone.","Behind the Manager door. If it's closed, he's on a call."]), intent:"where" };
-      if (!q) return { text:fresh(p, ["Everyone's in their own room: John in the workshop, Doriana in the back office, Angeles at customer care and Luis in the web studio.","Workshop, back office, customer care and web studio. Coffee bar is at the far end of the hallway."]), intent:"where" };
+      if (!q) return { text:fresh(p, ["Everyone's at their own workplace: John in the workshop, Doriana in the back office, Angeles at customer care and Luis in the web studio.","We all work in different places. We keep in touch by text, mostly."]), intent:"where" };
       if (q === p) return { text:"Right here!", intent:"where" };
       return { text:locate(q), intent:"where" };
     case "who": return { text:"I'm " + p.name + ", " + p.role.toLowerCase() + ". " + p.personality, intent:"who" };
@@ -3375,7 +3378,7 @@ function converse(p, raw){
     case "weekend": return { text:fresh(p, ["Nothing big, just recharging.","Something away from work, that's the plan.","Still deciding. A slow one, I hope."]), intent:"weekend" };
     case "like": return { text:fresh(p, ["I really do. My favorite part is " + prof.likes + ".","Yes! Even the hard days. What bugs me is " + prof.dislikes + ", but that's the job.","Honestly, yes. Nothing beats " + prof.likes + "."]), intent:"like", reason:"I'm good at it and I like seeing things done right" };
     case "praise":
-      moodShift(p, 0.12, "someone told me I'm doing a great job"); bumpCare(c, "mood", 0.06);
+      moodShift(p, 0.12, "someone told me I'm doing a great job"); bumpCare(c, "mood", 0.06); p.smileUntil = t + 4;
       return { text:fresh(p, ["Aw, thank you! That made my day.","Thanks! Honestly, that means a lot.","Stop it, you're too kind. Okay, keep going."]), intent:"praise", reason:"it's nice to hear" };
     case "help": return { text:"Ask me about my work! " + (KB[p.id] ? suggestTopics(p).trim() : "") + " Or ask how I'm doing, what I'm up to, or where the others are.", intent:"help" };
   }
@@ -3438,6 +3441,7 @@ function giveCare(p, kind, item, fromChat){
     line = fresh(p, ["Right, back to it. Thanks for the space!","Heads down. I'll get a lot done now.","Focus mode on."]);
   }
   p.lastCare = { kind:kind, item:item, label:label, t:t };
+  if (kind !== "nap" && kind !== "work") p.smileUntil = t + 4;
   saveCare();
   if (!fromChat) { p.log.push({ who:"them", text:line }); if (focus === p) { renderLog(p); renderCare(p); } }
   else if (focus === p) renderCare(p);
@@ -3549,7 +3553,7 @@ function ask(p, text){
   p.mem.push({ q:text, intent:res.intent, reason:res.reason }); if (p.mem.length > 6) p.mem.shift();
   var delay = 550 + Math.random() * 550 + Math.min(900, reply.length * 6);
   var now = clock.elapsedTime;
-  if (res.intent !== "care" && res.intent !== "wake" && (p.state === "sit" || p.state === "visit" || p.state === "coffee" || p.state === "errand")) {
+  if (res.intent !== "care" && res.intent !== "wake" && (p.state === "sit" || p.state === "errand")) {
     var talkDur = clamp(reply.length / 16, 2.5, 6.5) + delay / 1000;
     p.answering = now + talkDur;
     if (!busyAct(p)) startAct(p, "answer", now, talkDur);
@@ -3589,12 +3593,14 @@ function focusOn(p){
   if (low && low.v < 0.5 && (!p.askedAt || t - p.askedAt > 90)) { p.askedAt = t; p.log.push({ who:"them", text:fresh(p, ASK_FOR[low.k]) }); }
   renderLog(p); renderSugg(p);
   card.hidden = false;
+  layoutTile();
   p.chip.scrollIntoView({ block:"nearest", inline:"nearest" });
 }
 function clearFocus(){
   focus = null;
   PEOPLE.forEach(function(q){ q.chip.setAttribute("aria-pressed", "false"); q.tag.classList.remove("on"); });
   card.hidden = true;
+  if (vtile) vtile.hidden = true;
   if (menuOpen) openMenu(menuOpen);
   defaultGoal();
 }
@@ -3656,7 +3662,8 @@ scene.traverse(function(o){ if (o.material && o.material.isMeshStandardMaterial 
 /* ---------- post-processing on larger screens, dropped automatically when frames run slow ---------- */
 try {
   if (!isSmall) {
-    composer = new EffectComposer(renderer);
+    var rtS = new T.Vector2(); renderer.getDrawingBufferSize(rtS);
+    composer = new EffectComposer(renderer, new T.WebGLRenderTarget(rtS.x, rtS.y, { type:T.HalfFloatType, samples:4 }));
     composer.addPass(new RenderPass(scene, camera));
     aoPass = new GTAOPass(scene, camera, stage.clientWidth, stage.clientHeight);
     aoPass.gtaoMaterial.defines.PERSPECTIVE_CAMERA = 0;
@@ -3675,15 +3682,15 @@ var quality = { level:composer ? 0 : 1, fps:60, frames:0, acc:0, slow:0, ms:0 };
 function degrade(){
   quality.level++;
   if (quality.level === 1 && composer) { composer = null; aoPass = null; }
-  else if (quality.level === 2) { sun.shadow.mapSize.set(1024, 1024); if (sun.shadow.map) { sun.shadow.map.dispose(); sun.shadow.map = null; } if (SHADOW <= 1024) quality.level = 3; }
-  if (quality.level === 3) { renderer.setPixelRatio(1); }
-  else if (quality.level === 4) { sun.shadow.mapSize.set(512, 512); if (sun.shadow.map) { sun.shadow.map.dispose(); sun.shadow.map = null; } }
+  else if (quality.level === 2) { sun.shadow.mapSize.set(1024, 1024); if (sun.shadow.map) { sun.shadow.map.dispose(); sun.shadow.map = null; } }
+  else if (quality.level === 3) { sun.shadow.mapSize.set(512, 512); if (sun.shadow.map) { sun.shadow.map.dispose(); sun.shadow.map = null; } }
+  else if (quality.level === 4) { renderer.shadowMap.type = T.PCFShadowMap; renderer.shadowMap.needsUpdate = true; scene.traverse(function(o){ if (o.material && o.material.needsUpdate !== undefined && o.isMesh) o.material.needsUpdate = true; }); }
 }
 loadingEl.hidden = true;
 window.__owReady = true;
 var clock = new T.Clock();
 window.__ow = {
-  people:BY, focus:function(id){ focusOn(BY[id]); }, ask:function(id, q){ return converse(BY[id], q).text; }, say:function(id, q){ ask(BY[id], q); },
+  people:BY, focus:function(id){ focusOn(BY[id]); }, zoom:function(r, th){ goal.r = r; if (th !== undefined) goal.th = th; lastInteract = performance.now() / 1000 + 999; }, ask:function(id, q){ return converse(BY[id], q).text; }, say:function(id, q){ ask(BY[id], q); },
   care:function(id, kind, item){ return giveCare(BY[id], kind, item).text; },
   stats:function(){ return { calls:renderer.info.render.calls, triangles:renderer.info.render.triangles, geometries:renderer.info.memory.geometries, textures:renderer.info.memory.textures, fps:+quality.fps.toFixed(1), frameMs:+quality.ms.toFixed(2), quality:quality.level, dpr:renderer.getPixelRatio() }; },
   kbSizes:function(){ var o = {}; Object.keys(KB).forEach(function(k){ o[k] = KB[k].topics.length; }); return o; }
@@ -3699,6 +3706,93 @@ document.addEventListener("visibilitychange", function(){
   else if (!running) { running = true; clock.getDelta(); requestAnimationFrame(frame); }
 });
 
+/* ---------- faces: blink, expression from mood, talking mouth ---------- */
+function talking(p, t){
+  if (p.answering && t < p.answering) return true;
+  if (p.say && p.say.text.charAt(0) !== "\u{1F514}" && p.say.text !== "Zzz...") return true;
+  return !!(p.act && (p.act.n === "call" || p.act.n === "talk" || p.act.n === "deskPhone"));
+}
+function updateFace(p, t){
+  var F = p.face; if (!F) return;
+  var asleep = p.act && (p.act.n === "nap" || p.act.n === "napStand");
+  var smile = !asleep && ((p.smileUntil && t < p.smileUntil) || (p.act && p.act.n === "celebrate") || p.mood.kind === "great" || p.mood.kind === "excited" || (p.mood.kind === "good" && !grumpy(p)));
+  var frown = !asleep && !smile && (p.mood.kind === "tired" || p.mood.kind === "stressed" || grumpy(p));
+  if (t > F.blinkAt + 0.13) F.blinkAt = t + rand(2, 5.5);
+  var blink = t > F.blinkAt && t < F.blinkAt + 0.13;
+  var ey = asleep || blink ? 0.12 : smile ? 0.7 : frown ? 0.85 : 1;
+  F.eyes[0].scale.y = F.eyes[1].scale.y = 0.012 * ey;
+  for (var i = 0; i < 2; i++) {
+    var b = F.brows[i], sgn = b.userData.s;
+    b.position.y = 1.692 + (smile ? 0.004 : frown ? -0.002 : 0);
+    b.rotation.z = frown ? sgn * 0.28 : smile ? -sgn * 0.12 : -sgn * 0.05;
+  }
+  F.cheekMat.opacity = smile ? 0.35 : 0;
+  var talk = !asleep && talking(p, t);
+  var open = talk ? 0.35 + 0.65 * Math.abs(Math.sin(t * 11 + Math.sin(t * 4.3) * 2)) : 0;
+  F.open.visible = open > 0.15;
+  F.open.scale.y = 0.004 + 0.011 * open;
+  F.smile.visible = smile && !F.open.visible;
+  F.frown.visible = frown && !F.open.visible;
+  F.flat.visible = !smile && !frown && !F.open.visible;
+}
+var _hand = new V3();
+function updateToolFx(t){
+  var J = BY.john, a = J.act;
+  var hammering = a && a.n === "hammer" && t - a.t0 > 0.4 && t - a.t0 < a.dur - 0.4;
+  var hp = (t * 1.5) % 1;
+  if (hammering && hp > 0.83 && hp < 0.97) {
+    J.rig.b.RightHand.getWorldPosition(_hand);
+    tokFlash.position.set(_hand.x, 0.99, _hand.z);
+    tokFlash.material.opacity = 1 - (hp - 0.83) / 0.14; tokFlash.visible = true;
+  } else tokFlash.visible = false;
+  var sawing = a && a.n === "saw" && t - a.t0 > 0.5 && t - a.t0 < a.dur - 0.3;
+  for (var i = 0; i < sawPuff.length; i++) {
+    var sp = sawPuff[i];
+    if (!sawing) { sp.m.visible = false; continue; }
+    var f = (t * 0.9 + sp.o) % 1;
+    sp.m.visible = true;
+    sp.m.position.set(SAWCUT.x + Math.sin(sp.o * 40) * 0.12 * f, 0.74 - f * 0.6, SAWCUT.z + 0.12 + Math.cos(sp.o * 31) * 0.08 * f);
+    sp.m.scale.setScalar(0.02 + f * 0.035);
+    sp.m.material.opacity = 0.75 * (1 - f);
+  }
+}
+var SAWCUT = L("john", 0.3, 1.55);
+var vcam = new T.PerspectiveCamera(30, 220 / 270, 0.05, 30), vtile = document.getElementById("vtile"), vtName = document.getElementById("vtName");
+var _vh = new V3(), _vf = new V3(), vRect = { x:0, y:0, w:0, h:0 }, vClear = new T.Color(0x23272e), _cc = new T.Color();
+function layoutTile(){
+  if (!vtile) return;
+  if (!focus) { vtile.hidden = true; return; }
+  vtile.hidden = false;
+  if (stage.clientWidth <= 640) vtile.style.bottom = (card.offsetHeight + 22) + "px"; else vtile.style.bottom = "";
+  var sr = stage.getBoundingClientRect(), tr = vtile.getBoundingClientRect();
+  vRect.x = tr.left - sr.left; vRect.y = sr.bottom - tr.bottom; vRect.w = tr.width; vRect.h = tr.height;
+  var nm = focus.name + " · " + MOODS[focus.mood.kind].e + " " + MOODS[focus.mood.kind].label;
+  if (vtName.textContent !== nm) vtName.textContent = nm;
+}
+function renderTile(){
+  if (!focus || vtile.hidden || vRect.w < 10) return;
+  var p = focus, hd = p.heading + p.swivel;
+  p.head.getWorldPosition(_vh);
+  _vf.set(Math.sin(hd), 0, Math.cos(hd));
+  vcam.position.set(_vh.x + _vf.x * 1.15, _vh.y + 0.1, _vh.z + _vf.z * 1.15);
+  vcam.lookAt(_vh.x, _vh.y - 0.02, _vh.z);
+  vcam.near = 0.62; vcam.far = 12;
+  vcam.aspect = vRect.w / vRect.h; vcam.updateProjectionMatrix();
+  var sau = renderer.shadowMap.autoUpdate; renderer.shadowMap.autoUpdate = false;
+  renderer.getClearColor(_cc); var ca = renderer.getClearAlpha();
+  renderer.setScissorTest(true);
+  renderer.setScissor(vRect.x, vRect.y, vRect.w, vRect.h);
+  renderer.setViewport(vRect.x, vRect.y, vRect.w, vRect.h);
+  renderer.setClearColor(vClear, 1); renderer.clear(true, true, false);
+  var bg = scene.background; scene.background = vClear;
+  renderer.render(scene, vcam);
+  renderer.shadowMap.autoUpdate = sau;
+  scene.background = bg;
+  renderer.setScissorTest(false);
+  renderer.setViewport(0, 0, stage.clientWidth, stage.clientHeight);
+  renderer.setClearColor(_cc, ca);
+}
+
 /* ---------- loop ---------- */
 var headPos = new V3(), tv = new V3(), lastSlow = 0, lastSave = 0, workSayAt = 8, rects = [];
 for (var ri = 0; ri < PEOPLE.length; ri++) rects.push({ l:0, r:0, t:0, b:0 });
@@ -3710,14 +3804,10 @@ function frame(){
   var dt = Math.min(clock.getDelta(), 0.05), t = clock.elapsedTime;
   for (var i = 0; i < PEOPLE.length; i++) updateAgent(PEOPLE[i], t, dt);
   updateChats(t);
-  for (i = 0; i < PEOPLE.length; i++) updateRig(PEOPLE[i], t, dt);
+  for (i = 0; i < PEOPLE.length; i++) { updateRig(PEOPLE[i], t, dt); updateFace(PEOPLE[i], t); }
+  updateToolFx(t);
 
   /* room ambience */
-  if (motes) {
-    var arr = motes.geometry.attributes.position.array, sd = motes.userData.seed;
-    for (i = 0; i < sd.length; i++) { var s = sd[i]; arr[i * 3] = s[0] + Math.sin(t * 0.13 + s[3]) * 0.35; arr[i * 3 + 1] = 0.3 + ((s[1] + t * s[4] * 0.4) % 2.2); arr[i * 3 + 2] = s[2] + Math.cos(t * 0.11 + s[3]) * 0.35; }
-    motes.geometry.attributes.position.needsUpdate = true;
-  }
   var calling = BY.angeles.act && BY.angeles.act.n === "call";
   phoneLamp.color.setHex(calling ? 0x3fa36b : (Math.sin(t * 9) > 0 ? 0xff3b30 : 0x5a1612));
   for (i = 0; i < queueLamps.length; i++) queueLamps[i].color.setHex(Math.sin(t * 2.2 + i * 1.3) > 0.2 ? 0x3fa36b : (i === 2 && Math.sin(t * 6) > 0 ? 0xe0a030 : 0x1e5136));
@@ -3743,12 +3833,16 @@ function frame(){
       if (icon !== p.needText) { p.needText = icon; p.tagNeed.textContent = icon; }
     }
     if (focus) renderCare(focus);
+    layoutTile();
     if (t - lastSave > 20) { lastSave = t; saveCare(); }
   }
 
   if (focus) {
     focus.head.getWorldPosition(headPos);
     goal.tx = headPos.x; goal.ty = headPos.y - 0.35; goal.tz = headPos.z;
+    var sw = stage.clientWidth, sh = stage.clientHeight, upp = 2 * view.r / Math.max(1, sh);
+    if (sw > 640) { var off = (Math.min(card.offsetWidth + 16, sw * 0.45) - (!vtile || vtile.hidden ? 0 : 236)) / 2 * upp; goal.tx -= camRight.x * off; goal.tz -= camRight.z * off; }
+    else { var offv = Math.min(card.offsetHeight, sh * 0.64) / 2 * upp; goal.tx -= camUp.x * offv; goal.ty -= camUp.y * offv; goal.tz -= camUp.z * offv; }
   }
   var kk = snapCam > 0 ? 1 : 1 - Math.exp(-dt * (dragging ? 14 : reduceMotion ? 9 : 3.2));
   if (snapCam > 0) snapCam--;
@@ -3773,6 +3867,7 @@ function frame(){
 
   if (composer) { try { composer.render(dt); } catch (e) { composer = null; renderer.render(scene, camera); } }
   else renderer.render(scene, camera);
+  renderTile();
 
   /* labels follow every frame; overlap culling is cheap with four people */
   var w = stage.clientWidth, h = stage.clientHeight, np = 0;
@@ -3795,8 +3890,10 @@ function frame(){
     if (q.tagText !== q.statusNow) { q.tagText = q.statusNow; q.tagSt.textContent = q.statusNow; }
   }
 
+  updatePings(t, w, h);
+
   /* adaptive quality: average frame rate over two seconds, step down when it stays under 45 */
-  quality.frames++; quality.acc += dt; quality.ms = lerp(quality.ms, performance.now() - f0, 0.05);
+  quality.frames++; quality.acc += Math.min(0.5, (f0 - (quality.last || f0)) / 1000); quality.last = f0; quality.ms = lerp(quality.ms, performance.now() - f0, 0.05);
   if (quality.acc >= 2) {
     quality.fps = quality.frames / quality.acc; quality.frames = 0; quality.acc = 0;
     if (quality.fps < 45 && t > 4) { quality.slow++; if (quality.slow >= 2 && quality.level < 4) { degrade(); quality.slow = 0; } }
