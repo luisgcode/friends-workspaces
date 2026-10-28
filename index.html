@@ -255,7 +255,7 @@ var PEOPLE = [
   { id:"doriana", name:"Doriana", role:"Asistente del gerente", place:"Oficina del concesionario", pron:"she",
     personality:"Organizada y cálida, con un humor seco. Encuentra cualquier archivo en diez segundos.",
     topics:"Expedientes, contratos, papeleo de financiamiento, matrículas, citas y la agenda del gerente",
-    shirt:"#f2efe9", jacket:"#5a4a78", pants:"#2b2833", shoes:"#2a1d1a", skin:"#e2b99c", hair:"#141010", style:"long", sleeves:true, collar:"#f2efe9",
+    shirt:"#f2efe9", jacket:"#5a4a78", pants:"#2b2833", shoes:"#2a1d1a", skin:"#e2b99c", hair:"#141010", style:"long", sleeves:true, collar:"#f2efe9", septum:true,
     status:"Revisando un expediente" },
   { id:"angeles", name:"Angeles", role:"Atención al cliente", place:"Centro de llamadas", pron:"she",
     personality:"Calmada, paciente y positiva. La voz que te arregla el día.",
@@ -344,7 +344,7 @@ var G = {
   collar: new T.TorusGeometry(1, 0.22, 8, 24, Math.PI * 1.25),
   ring: new T.TorusGeometry(1, 0.1, 6, 20),
   wedge: new T.CylinderGeometry(1, 1, 1, 12, 1, false, 0, 0.62),
-  mouthArc: new T.TorusGeometry(0.017, 0.0035, 6, 14, Math.PI)
+  septum: new T.TorusGeometry(1, 0.16, 6, 20, Math.PI * 1.7)
 };
 var matCache = {};
 function M(color, o){
@@ -1191,6 +1191,25 @@ function dress(p, body, isJoint){
     garment(body, function(x, y, z){ return z > 0.02 && y > 0.5 && y < 1.42 && Math.abs(x) < 0.2; }, 0.05, function(x, y, z, out){ out.copy(cA); if (y > 1.0 && y < 1.08 && Math.abs(x) < 0.12) out.multiplyScalar(0.78); if (y < 0.55) out.multiplyScalar(0.85); }, clothMat(0.2));
   }
 }
+/* mouth curve: s from -1 (corners down) to 1 (corners up), rebuilt only when it changes */
+var MOUTH_SEG = 8, _mm = new T.Matrix4(), _mq = new T.Quaternion(), _ms = new V3(), _mp = new V3(), _mz = new V3(0, 0, 1);
+function setMouth(F, s){
+  var hw = 0.0185 - Math.max(0, -s) * 0.003, y0 = 1.6155, px = 0, py = 0;
+  for (var i = 0; i <= MOUTH_SEG; i++) {
+    var u = i / MOUTH_SEG * 2 - 1, x = u * hw, y = y0 + s * (0.0085 * u * u - 0.003);
+    if (i > 0) {
+      var dx = x - px, dy = y - py;
+      _mp.set((x + px) / 2, (y + py) / 2, 0.1272 - 5 * ((x + px) / 2) * ((x + px) / 2));
+      _mq.setFromAxisAngle(_mz, Math.atan2(dy, dx));
+      _ms.set(Math.hypot(dx, dy) + 0.0012, 0.0042, 0.006);
+      _mm.compose(_mp, _mq, _ms);
+      F.mouth.setMatrixAt(i - 1, _mm);
+    }
+    px = x; py = y;
+  }
+  F.mouth.instanceMatrix.needsUpdate = true;
+  F.drawn = s;
+}
 /* head attachments, modelled in bind-pose space and re-parented to the Head bone */
 function buildHead(p, model, head, spine2){
   var g = new T.Group(); model.add(g);
@@ -1204,22 +1223,27 @@ function buildHead(p, model, head, spine2){
     add(G.hsph, hm, 0.1, 0.23, 0.06, 0, 1.53, -0.09, g).rotation.x = 0.12;
     [-1, 1].forEach(function(s){ add(G.hsph, hm, 0.028, 0.14, 0.05, s * 0.088, 1.59, 0.005, g); });
   }
-  /* face: eyes that blink, brows, nose, cheeks and a mouth that smiles, frowns and moves when talking */
+  /* face: eyes that blink, brows, nose and a mouth whose curve follows the mood and moves when talking */
   var skinC = new T.Color(p.skin);
   var eyeM = M("#15171b", { roughness:0.25 }), browM = M(p.hair, { roughness:0.8 }), lipM = M("#" + skinC.clone().lerp(new T.Color("#8a3b33"), 0.45).getHexString(), { roughness:0.6 });
-  var noseM = M("#" + skinC.clone().multiplyScalar(0.94).getHexString(), { roughness:0.62 }), cheekM = new T.MeshStandardMaterial({ color:0xe0806a, roughness:0.7, transparent:true, opacity:0, depthWrite:false });
-  var F = { eyes:[], brows:[], cheeks:[] };
+  var noseM = M("#" + skinC.clone().multiplyScalar(0.94).getHexString(), { roughness:0.62 });
+  var F = { eyes:[], brows:[], s:0, drawn:9 };
   [-1, 1].forEach(function(s){
     var e = add(G.lowSph, eyeM, 0.0105, 0.012, 0.006, s * 0.034, 1.668, 0.117, g, false); F.eyes.push(e);
     var b = add(G.box, browM, 0.032, 0.0065, 0.008, s * 0.035, 1.692, 0.116, g, false); b.userData.s = s; F.brows.push(b);
-    var ck = add(G.lowSph, cheekM, 0.02, 0.012, 0.004, s * 0.052, 1.638, 0.104, g, false); F.cheeks.push(ck);
   });
   add(G.lowSph, noseM, 0.012, 0.018, 0.012, 0, 1.646, 0.124, g, false);
-  F.smile = add(G.mouthArc, lipM, 1, 1, 1, 0, 1.618, 0.112, g, false); F.smile.rotation.z = Math.PI;
-  F.frown = add(G.mouthArc, lipM, 0.8, 0.8, 1, 0, 1.612, 0.112, g, false);
-  F.flat = add(G.box, lipM, 0.034, 0.005, 0.006, 0, 1.616, 0.112, g, false);
-  F.open = add(G.lowSph, M("#4a1f1c", { roughness:0.5 }), 0.016, 0.01, 0.006, 0, 1.613, 0.111, g, false);
-  F.blinkAt = rand(1, 4); F.cheekMat = cheekM;
+  /* the mouth is one curve made of short segments: corners go up when happy, down when tired or stressed */
+  F.mouth = new T.InstancedMesh(G.box, lipM, MOUTH_SEG); F.mouth.frustumCulled = false; g.add(F.mouth);
+  setMouth(F, 0.3);
+  if (p.septum) {
+    /* small steel horseshoe through the septum, hanging just under the nose tip */
+    var stl = M("#c9ccd1", { roughness:0.22, metalness:0.95, envMapIntensity:1 });
+    add(G.septum, stl, 0.0052, 0.0052, 0.0052, 0, 1.6268, 0.1305, g, false).rotation.z = -Math.PI / 2 + Math.PI * 0.15;
+    [-1, 1].forEach(function(s){ var an = -Math.PI / 2 + s * Math.PI * 0.15; add(G.lowSph, stl, 0.0013, 0.0013, 0.0013, Math.cos(an) * 0.0052, 1.6268 + Math.sin(an) * 0.0052, 0.1305, g, false); });
+  }
+  F.open = add(G.lowSph, M("#4a1f1c", { roughness:0.5 }), 0.016, 0.01, 0.004, 0, 1.6135, 0.1262, g, false);
+  F.blinkAt = rand(1, 4);
   p.face = F;
   if (p.cap) {
     var capM = M(p.cap, { roughness:0.75 });
@@ -4167,11 +4191,15 @@ function talking(p, t){
   if (p.say && p.say.text.charAt(0) !== "\u{1F514}" && p.say.text !== "Zzz...") return true;
   return !!(p.act && (p.act.n === "call" || p.act.n === "talk" || p.act.n === "deskPhone"));
 }
+var MOUTH_OF = { excited:0.95, great:0.8, good:0.5, okay:0.12, tired:-0.3, stressed:-0.5 };
 function updateFace(p, t){
   var F = p.face; if (!F) return;
   var asleep = p.act && (p.act.n === "nap" || p.act.n === "napStand");
-  var smile = !asleep && ((p.smileUntil && t < p.smileUntil) || (p.act && p.act.n === "celebrate") || p.mood.kind === "great" || p.mood.kind === "excited" || (p.mood.kind === "good" && !grumpy(p)));
-  var frown = !asleep && !smile && (p.mood.kind === "tired" || p.mood.kind === "stressed" || grumpy(p));
+  /* target curve from the mood, nudged by how cared for they feel; eased so it never snaps */
+  var tg = asleep ? 0 : (p.smileUntil && t < p.smileUntil) || (p.act && p.act.n === "celebrate") ? 1 : MOUTH_OF[p.mood.kind];
+  if (!asleep) tg = clamp(tg + (p.care.mood - 0.7) * 0.5 - (grumpy(p) ? 0.35 : 0), -0.8, 1);
+  F.s += (tg - F.s) * 0.06;
+  var smile = F.s > 0.55, frown = F.s < -0.2;
   if (t > F.blinkAt + 0.13) F.blinkAt = t + rand(2, 5.5);
   var blink = t > F.blinkAt && t < F.blinkAt + 0.13;
   var ey = asleep || blink ? 0.12 : smile ? 0.7 : frown ? 0.85 : 1;
@@ -4181,14 +4209,12 @@ function updateFace(p, t){
     b.position.y = 1.692 + (smile ? 0.004 : frown ? -0.002 : 0);
     b.rotation.z = frown ? sgn * 0.28 : smile ? -sgn * 0.12 : -sgn * 0.05;
   }
-  F.cheekMat.opacity = smile ? 0.35 : 0;
   var talk = !asleep && talking(p, t);
   var open = talk ? 0.35 + 0.65 * Math.abs(Math.sin(t * 11 + Math.sin(t * 4.3) * 2)) : 0;
   F.open.visible = open > 0.15;
   F.open.scale.y = 0.004 + 0.011 * open;
-  F.smile.visible = smile && !F.open.visible;
-  F.frown.visible = frown && !F.open.visible;
-  F.flat.visible = !smile && !frown && !F.open.visible;
+  F.mouth.visible = !F.open.visible;
+  if (F.mouth.visible && Math.abs(F.s - F.drawn) > 0.02) setMouth(F, F.s);
 }
 var _hand = new V3();
 function updateToolFx(t){
