@@ -4,6 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Nuestros espacios de trabajo</title>
+<link rel="icon" href="data:,">
 <meta name="description" content="Cuatro amigos, cuatro trabajos. Toca a cualquiera para ver qué está haciendo, conversar sobre su trabajo o llevarle algo de comer.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -275,6 +276,11 @@ var PEOPLE = [
 ];
 var BY = {}; PEOPLE.forEach(function(p, i){ BY[p.id] = p; p.idx = i; });
 
+/* the character model downloads while the rooms are being built */
+var MODEL_URL = "https://cdn.jsdelivr.net/gh/mrdoob/three.js@r160/examples/models/gltf/Xbot.glb";
+var modelLoad = new GLTFLoader().loadAsync(MODEL_URL);
+modelLoad.catch(function(){});
+
 /* ---------- renderer and adaptive quality ---------- */
 var renderer;
 try { renderer = new T.WebGLRenderer({ antialias:true, powerPreference:"high-performance" }); }
@@ -304,6 +310,7 @@ scene.environment = pmrem.fromScene(new RoomEnvironment(renderer), 0.04).texture
 pmrem.dispose();
 var composer = null, aoPass = null;
 
+await yieldNow(); /* let the page breathe between build steps */
 /* ---------- lights: one shadow light, a sky fill and one tinted light per room ---------- */
 scene.add(new T.HemisphereLight(0xffffff, 0xc9b49a, 0.45));
 var sun = new T.DirectionalLight(0xfff4e6, 0.95);
@@ -480,6 +487,7 @@ function beginRoom(id){ var R = ROOMS[id]; CUR = new T.Group(); CUR.position.set
 function endRoom(){ CUR = STATIC; }
 function L(id, x, z){ var R = ROOMS[id]; return new V3(R.cx + x, 0, R.cz + z); }
 
+await yieldNow();
 /* ---------- reusable furniture ---------- */
 var metalDark = M("#2a2e35", { roughness:0.35, metalness:0.6 });
 var alu = M("#a9b0b8", { roughness:0.3, metalness:0.75 });
@@ -514,7 +522,7 @@ function screenTex(kind){
       while (y < h - 4) { var x = 56 + Math.floor(r() * 4) * 8, n = 1 + Math.floor(r() * 4); for (j = 0; j < n; j++) { var ww = 9 + r() * 37; g.fillStyle = cols[Math.floor(r() * cols.length)]; g.fillRect(x, y, ww, 4); x += ww + 4; } y += 8; }
     } else if (kind === "web") {
       g.fillStyle = "#ffffff"; g.fillRect(0, 0, w, h);
-      g.fillStyle = "#3c5a78"; g.font = "700 12px " + FONT; g.textBaseline = "middle"; g.fillText("our site", 9, 11);
+      g.fillStyle = "#3c5a78"; g.font = "700 12px " + FONT; g.textBaseline = "middle"; g.fillText("nuestro sitio", 9, 11);
       g.fillStyle = "#c9ced4"; for (i = 0; i < 4; i++) g.fillRect(130 + i * 30, 9, 22, 4);
       var gr = g.createLinearGradient(0, 22, w, 86); gr.addColorStop(0, "#3c5a78"); gr.addColorStop(1, "#7fa6c9");
       g.fillStyle = gr; g.fillRect(0, 22, w, 64);
@@ -531,7 +539,7 @@ function screenTex(kind){
       g.fillStyle = "#e9edf2"; g.fillRect(0, 0, w, h);
       g.fillStyle = "#ffffff"; g.fillRect(40, 6, 176, h - 6);
       g.fillStyle = "#5a4a78"; g.fillRect(40, 6, 176, 16);
-      g.fillStyle = "#ffffff"; g.font = "700 10px " + FONT; g.textBaseline = "middle"; g.fillText("DEAL FILE CHECKLIST", 48, 14);
+      g.fillStyle = "#ffffff"; g.font = "700 10px " + FONT; g.textBaseline = "middle"; g.fillText("LISTA DEL EXPEDIENTE", 48, 14);
       for (i = 0; i < 9; i++) {
         var done = i < 6;
         g.strokeStyle = done ? "#2fa36b" : "#b9c1c9"; g.lineWidth = 2; g.strokeRect(50, 30 + i * 14, 8, 8);
@@ -621,8 +629,9 @@ function desk(x, z, h, opts){
   chair(cg, 0, 0.02, opts.chair);
   return g;
 }
+await yieldNow();
 /* ---------- ROOM: John, woodworking workshop ---------- */
-var shopLight, sawPuff = [], tokFlash;
+var shopLight, sawPuff = [], tokFlash, miterHead, miterBlade;
 (function(){
   beginRoom("john");
   /* free-standing workbench; John stands behind it facing the camera */
@@ -700,21 +709,50 @@ var shopLight, sawPuff = [], tokFlash;
   add(G.box, new T.MeshBasicMaterial({ color:0xfff1d6, toneMapped:false }), 1.3, 0.02, 0.14, bx, 2.565, bz - 0.3, CUR, false);
   shopLight = new T.PointLight(0xffd29a, 0.8, 6.5, 1.6);
   shopLight.position.set(bx, 2.4, bz); CUR.add(shopLight);
+  /* mitre saw station against the cross wall: stand, saw base, fence and a strip waiting to be cut */
+  var mx = 1.95, mz = 1.15;
+  aoDecal(CUR, mx, mz, 0.8, 1.2);
+  add(G.box, M("#3a3f47", { roughness:0.5, metalness:0.3 }), 0.55, 0.05, 1.0, mx, 0.8, mz);
+  [[-0.22,-0.42],[0.22,-0.42],[-0.22,0.42],[0.22,0.42]].forEach(function(q){ add(G.box, metalDark, 0.04, 0.78, 0.04, mx + q[0], 0.39, mz + q[1]); });
+  add(G.box, metalDark, 0.46, 0.03, 0.9, mx, 0.2, mz, CUR, false);
+  add(G.box, M("#5b6168", { roughness:0.45, metalness:0.5 }), 0.4, 0.06, 0.42, mx, 0.855, mz);
+  add(G.cyl, M("#9aa3ad", { roughness:0.3, metalness:0.8 }), 0.15, 0.012, 0.15, mx - 0.03, 0.892, mz, CUR, false);
+  add(G.box, M("#9aa3ad", { roughness:0.3, metalness:0.8 }), 0.03, 0.08, 0.9, mx + 0.16, 0.92, mz, CUR, false);
+  add(G.box, M("#f2c230", { roughness:0.45 }), 0.12, 0.05, 0.16, mx - 0.2, 0.855, mz, CUR, false);
+  add(G.box, M("#d9b27f", { roughness:0.55 }), 0.1, 0.03, 0.95, mx + 0.08, 0.912, mz - 0.05);
+  /* offcut pile on the floor beside the stand */
+  var off = seeded(77);
+  for (var oc = 0; oc < 11; oc++) {
+    var ol = 0.1 + off() * 0.24;
+    add(G.box, M(["#d9b27f","#c4935c","#e6c89a"][oc % 3], { roughness:0.6 }), 0.07, 0.025, ol, 1.55 + (off() - 0.5) * 0.3, 0.013 + (oc > 6 ? 0.025 : 0), 1.95 + (off() - 0.5) * 0.22, CUR, false).rotation.y = off() * 3;
+  }
   /* sawdust on the floor */
   var dustTex = canvasTex(128, 128, function(g){
     var r = seeded(41);
     for (var i = 0; i < 260; i++) { g.fillStyle = "rgba(236,206,150," + (0.2 + r() * 0.5).toFixed(2) + ")"; var a = r() * 6.28, d = Math.pow(r(), 0.7) * 58; g.fillRect(64 + Math.cos(a) * d, 64 + Math.sin(a) * d, 2, 2); }
   });
   var dustMat = new T.MeshBasicMaterial({ map:dustTex, transparent:true, depthWrite:false });
-  [[bx,-1.0,2.4],[0.3,1.6,1.4],[1.75,-1.3,1.1]].forEach(function(q){ var d = new T.Mesh(G.plane, dustMat); d.rotation.x = -Math.PI / 2; d.scale.set(q[2], q[2] * 0.7, 1); d.position.set(q[0], 0.01, q[1]); d.renderOrder = 1; CUR.add(d); });
+  [[bx,-1.0,2.4],[0.3,1.6,1.4],[1.75,-1.3,1.1],[1.8,1.25,1.1]].forEach(function(q){ var d = new T.Mesh(G.plane, dustMat); d.rotation.x = -Math.PI / 2; d.scale.set(q[2], q[2] * 0.7, 1); d.position.set(q[0], 0.01, q[1]); d.renderOrder = 1; CUR.add(d); });
   endRoom();
   /* dynamic bits that follow John's work: a sawdust puff at the cut and a small flash where the hammer lands */
-  for (var k = 0; k < 7; k++) { var m = new T.Mesh(G.lowSph, new T.MeshBasicMaterial({ color:0xf1d9ac, transparent:true, opacity:0, depthWrite:false })); m.scale.setScalar(0.03); m.visible = false; scene.add(m); sawPuff.push({ m:m, o:k / 7 }); }
+  /* the saw head is live: it pivots down at the fence when John cuts */
+  var pv = L("john", 2.13, 1.15);
+  miterHead = new T.Group(); miterHead.position.set(pv.x, 0.99, pv.z); miterHead.rotation.z = -0.55; scene.add(miterHead);
+  var mh = function(geo, mat, sx, sy, sz, x, y, z){ var m = new T.Mesh(geo, mat); m.scale.set(sx, sy, sz); m.position.set(x, y, z); m.castShadow = true; miterHead.add(m); return m; };
+  mh(G.box, M("#5b6168", { roughness:0.45, metalness:0.5 }), 0.06, 0.06, 0.08, 0, 0.03, 0);
+  mh(G.box, M("#f2c230", { roughness:0.45 }), 0.2, 0.05, 0.06, -0.1, 0.09, 0);
+  mh(G.cyl, M("#f2c230", { roughness:0.45 }), 0.075, 0.1, 0.075, -0.15, 0.1, -0.07).rotation.x = Math.PI / 2;
+  mh(G.cyl, M("#3a3f47", { roughness:0.4, metalness:0.4 }), 0.13, 0.03, 0.13, -0.16, 0.02, 0).rotation.x = Math.PI / 2;
+  miterBlade = mh(G.cyl, M("#c9ccd1", { roughness:0.25, metalness:0.9 }), 0.115, 0.004, 0.115, -0.16, 0.0, 0.0);
+  miterBlade.rotation.x = Math.PI / 2;
+  mh(G.box, M("#2a2e35", { roughness:0.5 }), 0.04, 0.12, 0.035, -0.29, 0.12, 0).rotation.z = 0.3;
+  for (var k = 0; k < 12; k++) { var m = new T.Mesh(G.lowSph, new T.MeshBasicMaterial({ color:0xf1d9ac, transparent:true, opacity:0, depthWrite:false })); m.scale.setScalar(0.03); m.visible = false; scene.add(m); sawPuff.push({ m:m, o:k / 12 }); }
   var flashTex = canvasTex(64, 64, function(g, w, h){ var gr = g.createRadialGradient(32, 32, 2, 32, 32, 30); gr.addColorStop(0, "rgba(255,255,240,1)"); gr.addColorStop(0.4, "rgba(255,230,160,0.7)"); gr.addColorStop(1, "rgba(255,230,160,0)"); g.fillStyle = gr; g.fillRect(0, 0, w, h); });
   tokFlash = new T.Sprite(new T.SpriteMaterial({ map:flashTex, transparent:true, depthWrite:false, opacity:0, toneMapped:false }));
   tokFlash.scale.setScalar(0.22); tokFlash.visible = false; scene.add(tokFlash);
 })();
 
+await yieldNow();
 /* ---------- ROOM: Doriana, dealership back office ---------- */
 var deskLampLight;
 (function(){
@@ -749,7 +787,7 @@ var deskLampLight;
     g.fillStyle = "#1f2430"; g.beginPath(); g.moveTo(30, 140); g.quadraticCurveTo(40, 112, 80, 108); g.lineTo(110, 84); g.quadraticCurveTo(150, 76, 180, 96); g.lineTo(212, 108); g.quadraticCurveTo(232, 116, 230, 140); g.closePath(); g.fill();
     g.fillStyle = "#111"; g.beginPath(); g.arc(80, 140, 16, 0, 7); g.arc(190, 140, 16, 0, 7); g.fill();
     g.fillStyle = "#2b2420"; g.fillRect(0, hh - 22, w, 22);
-    g.fillStyle = "#ffffff"; g.font = "700 14px " + FONT; g.fillText("THE OPEN ROAD", 12, hh - 7);
+    g.fillStyle = "#ffffff"; g.font = "700 14px " + FONT; g.fillText("CARRETERA ABIERTA", 12, hh - 7);
   });
   add(G.box, M("#2b2420"), 0.74, 0.54, 0.04, -1.65, 2.05, wz + 0.02);
   panel(basicTex(posterTex), 0.68, 0.48, -1.65, 2.05, wz + 0.045, 0);
@@ -765,7 +803,7 @@ var deskLampLight;
     g.fillStyle = gr; g.fillRect(0, 0, w, hh);
     for (var i = 0; i < 5; i++) { g.fillStyle = "rgba(255,255,240,0.9)"; g.beginPath(); g.ellipse(50 + i * 105, 14, 30, 6, 0, 0, 7); g.fill(); }
     g.fillStyle = "#203a5c"; rrect(g, 30, 34, 190, 44, 10); g.fill();
-    g.fillStyle = "#ffffff"; g.font = "700 26px " + FONT; g.textAlign = "center"; g.textBaseline = "middle"; g.fillText("SHOWROOM", 125, 57);
+    g.fillStyle = "#ffffff"; g.font = "700 26px " + FONT; g.textAlign = "center"; g.textBaseline = "middle"; g.fillText("EXHIBICIÓN", 125, 57);
     var cx = 256, base = 238;
     g.fillStyle = "rgba(0,0,0,0.18)"; g.beginPath(); g.ellipse(cx, base + 14, 190, 14, 0, 0, 7); g.fill();
     var body = g.createLinearGradient(0, 160, 0, base); body.addColorStop(0, "#c8382d"); body.addColorStop(1, "#7e1e18");
@@ -786,7 +824,7 @@ var deskLampLight;
   add(G.box, alu, 0.06, wh + 0.1, 0.06, wx - ww / 2 - 0.02, wy, wz + 0.03, CUR, false);
   add(G.box, alu, 0.06, wh + 0.1, 0.06, wx + ww / 2 + 0.02, wy, wz + 0.03, CUR, false);
   add(G.box, alu, 0.04, wh, 0.04, wx, wy, wz + 0.03, CUR, false);
-  var dealTex = canvasTex(512, 96, function(g, w, hh){ g.fillStyle = "#203a5c"; rrect(g, 0, 0, w, hh, 20); g.fill(); g.fillStyle = "#ffffff"; g.font = "800 50px " + FONT; g.textAlign = "center"; g.textBaseline = "middle"; g.fillText("DEALERSHIP", w / 2, hh / 2 + 2); });
+  var dealTex = canvasTex(512, 96, function(g, w, hh){ g.fillStyle = "#203a5c"; rrect(g, 0, 0, w, hh, 20); g.fill(); g.fillStyle = "#ffffff"; g.font = "800 50px " + FONT; g.textAlign = "center"; g.textBaseline = "middle"; g.fillText("CONCESIONARIO", w / 2, hh / 2 + 2); });
   panel(basicTex(dealTex), 1.3, 0.24, wx, 2.4, wz + 0.02, 0);
   /* the manager's office door */
   var doorX = 1.78;
@@ -795,7 +833,7 @@ var deskLampLight;
   add(G.box, M("#ece4d6"), 0.06, 2.1, 0.07, doorX - 0.48, 1.05, wz + 0.02, CUR, false);
   add(G.box, M("#ece4d6"), 0.06, 2.1, 0.07, doorX + 0.48, 1.05, wz + 0.02, CUR, false);
   add(G.sph, chrome, 0.03, 0.03, 0.03, doorX - 0.33, 1.0, wz + 0.06, CUR, false);
-  var mgrTex = canvasTex(256, 64, function(g, w, hh){ g.fillStyle = "#d9c08a"; rrect(g, 0, 0, w, hh, 8); g.fill(); g.fillStyle = "#2b2420"; g.font = "700 30px " + FONT; g.textAlign = "center"; g.textBaseline = "middle"; g.fillText("MANAGER", w / 2, hh / 2 + 2); });
+  var mgrTex = canvasTex(256, 64, function(g, w, hh){ g.fillStyle = "#d9c08a"; rrect(g, 0, 0, w, hh, 8); g.fill(); g.fillStyle = "#2b2420"; g.font = "700 30px " + FONT; g.textAlign = "center"; g.textBaseline = "middle"; g.fillText("GERENCIA", w / 2, hh / 2 + 2); });
   panel(basicTex(mgrTex), 0.42, 0.105, doorX, 1.6, wz + 0.05, 0);
   /* printer on a stand by the right wall, archive boxes, plant */
   add(G.box, M("#d9d6cf"), 0.55, 0.72, 0.62, W - 0.3, 0.36, 0.95);
@@ -809,6 +847,7 @@ var deskLampLight;
   endRoom();
 })();
 
+await yieldNow();
 /* ---------- ROOM: Angeles, customer care desk ---------- */
 var queueLamps = [], phoneLamp, callLight;
 (function(){
@@ -832,9 +871,9 @@ var queueLamps = [], phoneLamp, callLight;
   /* queue board above the desk: calls waiting */
   var qTex = canvasTex(512, 256, function(g, w, hh){
     g.fillStyle = "#0e1a2a"; g.fillRect(0, 0, w, hh);
-    g.fillStyle = "#7fd3ff"; g.font = "700 30px " + FONT; g.textBaseline = "middle"; g.fillText("CALLS WAITING", 24, 40);
+    g.fillStyle = "#7fd3ff"; g.font = "700 30px " + FONT; g.textBaseline = "middle"; g.fillText("EN ESPERA", 24, 40);
     g.fillStyle = "#ffffff"; g.font = "800 110px " + FONT; g.fillText("3", 28, 140);
-    g.fillStyle = "#9fb3c8"; g.font = "600 26px " + FONT; g.fillText("Avg wait  1:12", 200, 112); g.fillText("Solved today  46", 200, 152); g.fillText("Agents on line  5", 200, 192);
+    g.fillStyle = "#9fb3c8"; g.font = "600 26px " + FONT; g.fillText("Espera prom.  1:12", 200, 112); g.fillText("Resueltas hoy  46", 200, 152); g.fillText("Agentes en línea  5", 200, 192);
     g.fillStyle = "#3fa36b"; g.fillRect(24, 214, 300, 12); g.fillStyle = "#e0a030"; g.fillRect(324, 214, 90, 12); g.fillStyle = "#d9534f"; g.fillRect(414, 214, 40, 12);
   });
   add(G.box, M("#14171b"), 0.06, 0.8, 1.4, -W + 0.03, 1.95, sz);
@@ -844,7 +883,7 @@ var queueLamps = [], phoneLamp, callLight;
   var tTex = canvasTex(512, 300, function(g, w, hh){
     g.fillStyle = "#fbfcfd"; g.fillRect(0, 0, w, hh);
     g.fillStyle = "#2b3440"; g.font = "700 24px " + FONT; g.textBaseline = "middle";
-    ["NEW","IN PROGRESS","DONE"].forEach(function(t, k){ g.fillText(t, 16 + k * 170, 24); g.fillStyle = "#dfe4ea"; g.fillRect(166 + k * 170, 8, 3, hh - 16); g.fillStyle = "#2b3440"; });
+    ["NUEVO","EN CURSO","LISTO"].forEach(function(t, k){ g.fillText(t, 16 + k * 170, 24); g.fillStyle = "#dfe4ea"; g.fillRect(166 + k * 170, 8, 3, hh - 16); g.fillStyle = "#2b3440"; });
     var r = seeded(31), cols = ["#ffe27a","#9fe0c9","#ffb3a7","#a7d3ff"];
     for (var k = 0; k < 3; k++) for (var j = 0; j < [4, 3, 6][k]; j++) { g.fillStyle = cols[Math.floor(r() * 4)]; var x = 14 + k * 170 + (j % 2) * 74, y = 50 + Math.floor(j / 2) * 78; g.fillRect(x, y, 66, 64); g.fillStyle = "rgba(0,0,0,0.25)"; g.fillRect(x + 8, y + 14, 46, 4); g.fillRect(x + 8, y + 26, 34, 4); }
   });
@@ -861,6 +900,7 @@ var queueLamps = [], phoneLamp, callLight;
   endRoom();
 })();
 
+await yieldNow();
 /* ---------- ROOM: Luis, web studio ---------- */
 var ledMat;
 (function(){
@@ -916,6 +956,7 @@ var ringMat = new T.MeshBasicMaterial({ color:0xd9643a, transparent:true, opacit
 var focusRing = new T.Mesh(new T.RingGeometry(0.46, 0.54, 48), ringMat);
 focusRing.rotation.x = -Math.PI / 2; focusRing.visible = false; scene.add(focusRing);
 
+await yieldNow();
 /* ---------- merge static geometry per material to cut draw calls ---------- */
 function mergeStatic(){
   STATIC.updateMatrixWorld(true);
@@ -976,6 +1017,7 @@ var ERRANDS = {
     { spot:L("john", 1.75, -1.2), face:L("john", 1.75, -2.2), act:"measure", dur:[5,8], go:"Caminando al gabinete", s:"Midiendo el gabinete con la cinta" },
     { spot:L("john", 0.25, 0.95), face:L("john", 0.25, 1.8), act:"saw", dur:[6,9], go:"Yendo a los caballetes", s:"Serruchando una tabla a medida" },
     { spot:L("john", -0.35, 0.95), face:L("john", -0.35, 1.8), act:"sand", dur:[5,7], go:"Yendo a los caballetes", s:"Lijando una tabla en los caballetes" },
+    { spot:L("john", 1.42, 1.15), face:L("john", 2.4, 1.15), act:"miter", dur:[6,9], go:"Yendo a la ingletadora", s:"Cortando un listón en la ingletadora" },
   ],
   luis:[
     { spot:L("luis", 1.55, -1.3), face:L("luis", 1.55, -2.4), act:"point", dur:[5,7], go:"Caminando a la pizarra", s:"Dibujando un mapa del sitio en la pizarra" }
@@ -1012,7 +1054,6 @@ function smoothTurn(p, target, dt, rate){
 }
 
 /* ---------- characters: rigged Xbot skeleton dressed in skinned clothing ---------- */
-var MODEL_URL = "https://cdn.jsdelivr.net/gh/mrdoob/three.js@r160/examples/models/gltf/Xbot.glb";
 var CH_SCALE = 1.70 / 1.806;
 var WALK_V = 1.26;
 var SEAT_DROP = 0.45;
@@ -1051,6 +1092,7 @@ var ACTS = {
   plane:{ Spine1:[0, 1, 0.38], LeftArm:[0.1, -0.55, 0.85], LeftForeArm:[-0.05, -0.35, 1], RightArm:[-0.1, -0.55, 0.85], RightForeArm:[0.05, -0.35, 1], Head:[0, 1, 0.55] },
   sand:{ Spine1:[0, 1, 0.3], RightArm:[-0.15, -0.6, 0.8], RightForeArm:[0, -0.45, 1], LeftArm:[0.2, -0.6, 0.7], LeftForeArm:[-0.1, -0.5, 1], Head:[0, 1, 0.55] },
   hammer:{ Spine1:[0, 1, 0.25], RightArm:[-0.25, -0.15, 0.75], RightForeArm:[0.1, 0.2, 1], LeftArm:[0.15, -0.65, 0.75], LeftForeArm:[-0.05, -0.55, 1], Head:[0, 1, 0.6] },
+  miter:{ Spine1:[0, 1, 0.3], RightArm:[-0.12, -0.3, 0.9], RightForeArm:[0.05, -0.2, 1], LeftArm:[0.35, -0.7, 0.6], LeftForeArm:[0.05, -0.65, 1], Head:[0, 1, 0.6] },
   saw:{ Spine1:[0, 1, 0.42], RightArm:[-0.12, -0.7, 0.7], RightForeArm:[0, -0.6, 1], LeftArm:[0.3, -0.75, 0.55], LeftForeArm:[-0.1, -0.8, 0.7], Head:[0, 1, 0.65] },
   chisel:{ Spine1:[0, 1, 0.32], RightArm:[-0.1, -0.5, 0.85], RightForeArm:[0.05, -0.25, 1], LeftArm:[0.12, -0.5, 0.85], LeftForeArm:[-0.08, -0.25, 1], Head:[0, 1, 0.6] },
   text:{ LeftArm:[0.15, -0.85, 0.4], LeftForeArm:[-0.3, 0.5, 1], RightArm:[-0.15, -0.85, 0.4], RightForeArm:[0.3, 0.5, 1], Head:[0, 1, 0.55] },
@@ -1445,6 +1487,7 @@ function updateRig(p, t, dt){
         else if ((a.n === "talk" || a.n === "answer" || a.n === "call") && n === "RightForeArm") { _dir[0] += 0.15 * Math.sin(t * 4.3); _dir[1] += 0.22 * Math.sin(t * 3.1); }
         else if (a.n === "plane") { var s = Math.sin(t * 2.4); if (n === "Spine1") _dir[2] += 0.14 * s; if (n === "LeftArm" || n === "RightArm") _dir[2] += 0.35 * s; }
         else if (a.n === "saw" && (n === "RightArm" || n === "RightForeArm")) { var sw2 = Math.sin(t * 5.5); _dir[2] += (n === "RightArm" ? 0.45 : 0.3) * sw2; _dir[1] += 0.12 * sw2; }
+        else if (a.n === "miter" && (n === "RightArm" || n === "RightForeArm")) { var mc = miterCut(t - a.t0); _dir[1] -= (n === "RightArm" ? 0.35 : 0.5) * mc; }
         else if (a.n === "chisel" && (n === "RightArm" || n === "LeftArm")) _dir[2] += 0.18 * Math.max(0, Math.sin(t * 3.2));
         else if (a.n === "text" && (n === "LeftForeArm" || n === "RightForeArm")) _dir[1] += 0.04 * Math.sin(t * 14 + (n === "LeftForeArm" ? 0 : 1.6));
         else if (a.n === "sand" && n === "RightForeArm") { _dir[0] += 0.35 * Math.cos(t * 6); _dir[2] += 0.25 * Math.sin(t * 6); }
@@ -1889,6 +1932,7 @@ if (window.ResizeObserver) new ResizeObserver(resize).observe(stage); else windo
 resize();
 view.tx = goal.tx; view.ty = goal.ty; view.tz = goal.tz; view.r = goal.r; view.th = goal.th + 0.25;
 
+await yieldNow();
 /* ---------- knowledge bases (generated per person) ---------- */
 var KB = {};
 KB["doriana"] = {
@@ -3521,6 +3565,7 @@ var AMB = {
   }
 };
 
+await yieldNow();
 /* ---------- conversation engine (Spanish first, basic English understood too) ---------- */
 var SPELL = { q:"que", k:"que", ke:"que", xq:"porque", pq:"porque", porq:"porque", xk:"porque", tb:"tambien", tmb:"tambien", tbn:"tambien", toy:"estoy", tas:"estas", ta:"esta", bn:"bien", bno:"bueno", pa:"para", d:"de", x:"por", xfa:"por favor", porfa:"por favor", plis:"por favor", grax:"gracias", grcs:"gracias", aki:"aqui", ahi:"ahi", ud:"usted", uds:"ustedes", tqm:"gracias", dnd:"donde", kien:"quien", komo:"como", sta:"esta", ola:"hola", hla:"hola",
   favourite:"favorite", colour:"color", u:"you", ur:"your", wanna:"want to", whats:"what is", hows:"how is", wheres:"where is", im:"i am", dont:"do not", cant:"can not", pls:"please", thx:"thanks", ty:"thanks", ok:"okay", okey:"okay", oki:"okay", vale:"okay", sup:"que haces", wyd:"que haces", hru:"como estas", yo:"hey", hiya:"hi" };
@@ -4132,19 +4177,34 @@ function mark(n){ PERF.marks[n] = Math.round(performance.now() - PERF.t0); }
 try { new PerformanceObserver(function(list){ list.getEntries().forEach(function(e){ PERF.long.push({ at:Math.round(e.startTime - PERF.t0), ms:Math.round(e.duration) }); }); }).observe({ type:"longtask", buffered:true }); } catch (e) {}
 function yieldNow(){ return new Promise(function(r){ setTimeout(r, 0); }); }
 mark("scene");
-try { GLTF = await new GLTFLoader().loadAsync(MODEL_URL); }
+try { GLTF = await modelLoad; }
 catch (e) { fail("No se pudieron cargar los personajes 3D. Revisa tu conexión y recarga la página."); return; }
 GLTF.animations.forEach(function(c){ CLIPS[c.name] = c; });
 T.AnimationUtils.makeClipAdditive(CLIPS.agree);
 mark("model");
 for (var pi0 = 0; pi0 < PEOPLE.length; pi0++) { makeRig(PEOPLE[pi0]); await yieldNow(); }
 mark("people");
-for (pi0 = 0; pi0 < PEOPLE.length; pi0++) { KBI[PEOPLE[pi0].id] = indexKB(PEOPLE[pi0].id); }
-await yieldNow();
+for (pi0 = 0; pi0 < PEOPLE.length; pi0++) { KBI[PEOPLE[pi0].id] = indexKB(PEOPLE[pi0].id); await yieldNow(); }
 mark("kb");
 try { if (renderer.compileAsync) await renderer.compileAsync(scene, camera); } catch (e) {}
-mark("shaders");
+mark("shaders"); PERF.progs = [renderer.info.programs.length];
 scene.traverse(function(o){ if (o.material && o.material.isMeshStandardMaterial && o.material.envMapIntensity === 1) o.material.envMapIntensity = 0.5; });
+/* warm-up behind the loader: the first draw of each shader is slow on some GPUs, so it happens in small steps, not in one long frame */
+basis(view.th, view.ph);
+camera.position.set(view.tx + camDir.x * 70, view.ty + camDir.y * 70, view.tz + camDir.z * 70);
+camera.lookAt(view.tx, view.ty, view.tz);
+camera.left = -view.r * aspect; camera.right = view.r * aspect; camera.top = view.r; camera.bottom = -view.r;
+camera.updateProjectionMatrix();
+try {
+  PEOPLE.forEach(function(q){ q.root.visible = false; });
+  renderer.shadowMap.needsUpdate = true; renderer.render(scene, camera); await yieldNow();
+  for (pi0 = 0; pi0 < PEOPLE.length; pi0++) {
+    PEOPLE[pi0].root.visible = true;
+    renderer.shadowMap.needsUpdate = true; renderer.render(scene, camera); await yieldNow();
+  }
+} catch (e) {}
+PEOPLE.forEach(function(q){ q.root.visible = true; });
+mark("warm");
 
 var quality = { level:0, fps:60, frames:0, acc:0, slow:0, ms:0 };
 function degrade(){
@@ -4161,6 +4221,7 @@ window.__ow = {
   people:BY, focus:function(id){ focusOn(BY[id]); }, zoom:function(r, th){ goal.r = r; if (th !== undefined) goal.th = th; lastInteract = performance.now() / 1000 + 999; }, ask:function(id, q){ return converse(BY[id], q).text; }, say:function(id, q){ ask(BY[id], q); },
   care:function(id, kind, item){ return giveCare(BY[id], kind, item).text; },
   text:function(a, b){ sendText(BY[a], BY[b], clock.elapsedTime); }, act:function(id, n, d){ startAct(BY[id], n, clock.elapsedTime, d || 8, null, { label:"Test" }); },
+  errand:function(id, i){ var p = BY[id], e = ERRANDS[id][i]; goTrip(p, clock.elapsedTime, "errand", buildPath(p.id, p.seat, p.seatVia, e.spot, e.via || [])); p.trip.errand = e; },
   perf:function(){ return PERF; },
   stats:function(){ return { calls:renderer.info.render.calls, triangles:renderer.info.render.triangles, geometries:renderer.info.memory.geometries, textures:renderer.info.memory.textures, fps:+quality.fps.toFixed(1), frameMs:+quality.ms.toFixed(2), quality:quality.level, dpr:renderer.getPixelRatio() }; },
   kbSizes:function(){ var o = {}; Object.keys(KB).forEach(function(k){ o[k] = KB[k].topics.length; }); return o; }
@@ -4227,17 +4288,24 @@ function updateToolFx(t){
     tokFlash.material.opacity = 1 - (hp - 0.83) / 0.14; tokFlash.visible = true;
   } else tokFlash.visible = false;
   var sawing = a && a.n === "saw" && t - a.t0 > 0.5 && t - a.t0 < a.dur - 0.3;
+  /* mitre saw: the head comes down, holds through the cut and lifts again; dust only while the blade is in the wood */
+  var mitering = a && a.n === "miter" && t - a.t0 < a.dur - 0.3, md = mitering ? miterCut(t - a.t0) : 0;
+  miterHead.rotation.z = lerp(miterHead.rotation.z, -0.55 * (1 - md), 0.35);
+  if (md > 0.6) miterBlade.rotation.y += 0.9;
+  var spray = md > 0.75;
   for (var i = 0; i < sawPuff.length; i++) {
     var sp = sawPuff[i];
-    if (!sawing) { sp.m.visible = false; continue; }
-    var f = (t * 0.9 + sp.o) % 1;
+    if (!sawing && !spray) { sp.m.visible = false; continue; }
+    var f = (t * (spray ? 1.8 : 0.9) + sp.o) % 1;
     sp.m.visible = true;
-    sp.m.position.set(SAWCUT.x + Math.sin(sp.o * 40) * 0.12 * f, 0.74 - f * 0.6, SAWCUT.z + 0.12 + Math.cos(sp.o * 31) * 0.08 * f);
+    if (spray) sp.m.position.set(MITCUT.x - 0.05 - f * 0.28 + Math.sin(sp.o * 40) * 0.05 * f, 0.93 + f * 0.1 - f * f * 0.5, MITCUT.z + Math.cos(sp.o * 31) * 0.14 * f);
+    else sp.m.position.set(SAWCUT.x + Math.sin(sp.o * 40) * 0.12 * f, 0.74 - f * 0.6, SAWCUT.z + 0.12 + Math.cos(sp.o * 31) * 0.08 * f);
     sp.m.scale.setScalar(0.02 + f * 0.035);
     sp.m.material.opacity = 0.75 * (1 - f);
   }
 }
-var SAWCUT = L("john", 0.3, 1.55);
+function miterCut(u){ return u < 0.6 ? 0 : bump(((u - 0.6) % 2.8) / 2.8, 0.12, 0.72, 0.14); }
+var SAWCUT = L("john", 0.3, 1.55), MITCUT = L("john", 1.95, 1.15);
 var vcam = new T.PerspectiveCamera(30, 220 / 270, 0.05, 30), vtile = document.getElementById("vtile"), vtName = document.getElementById("vtName");
 var _vh = new V3(), _vf = new V3(), vRect = { x:0, y:0, w:0, h:0 }, vClear = new T.Color(0x23272e), _cc = new T.Color();
 function layoutTile(){
@@ -4356,7 +4424,7 @@ function frame(){
   /* the shadow map is redrawn every other frame: people move slowly, and it halves the skinned vertex work */
   if ((shadowTick++ & 1) === 0) renderer.shadowMap.needsUpdate = true;
   renderer.render(scene, camera);
-  if (firstFrame) { firstFrame = false; loadingEl.hidden = true; }
+  if (firstFrame) { firstFrame = false; loadingEl.hidden = true; PERF.progs.push(renderer.info.programs.length); mark("firstFrame"); }
   renderTile();
 
   /* labels follow every frame; overlap culling is cheap with four people */
