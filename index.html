@@ -1624,13 +1624,13 @@ var MOODS = {
 function moodLabel(p, k){ var m = MOODS[k || p.mood.kind]; return p.pron === "she" && m.labelF ? m.labelF : m.label; }
 var PROFILE = {
   doriana:{ traits:{ humour:0.7, chattiness:0.7, stressTol:0.7 }, moodW:{ excited:1, great:2.5, good:3, okay:1.5, tired:1, stressed:1 },
-    jokes:["Mi sonido favorito es la engrapadora atravesando cuarenta hojas\nJajajaja","Yo no pierdo archivos\nLos archivos se pierden solos y yo los encuentro","En algún lado hay un bolígrafo que sí escribe\nLo sigo buscando 🫩","Inicial aquí, aquí y aquí\nEsa es toda mi personalidad jajajaja"],
+    jokes:["Mi sonido favorito es la engrapadora atravesando cuarenta hojas\nAjajajaja","Yo no pierdo archivos\nLos archivos se pierden solos\nY yo los encuentro\nXD","En algún lado hay un bolígrafo que sí escribe\nLo sigo buscando 🫩","Inicial aquí, aquí y aquí\nEsa es toda mi personalidad\nAjajajaja","Literal el banco pide un papel más\nSiempre uno más\nBueh"],
     likes:"un expediente con todas las firmas en su lugar", dislikes:"una inicial que falta en la página nueve" },
   angeles:{ traits:{ humour:0.75, chattiness:0.8, stressTol:0.85 }, moodW:{ excited:1.5, great:3, good:3, okay:1.2, tired:1, stressed:0.6 },
-    jokes:["me sé la música de espera tan bien que la toco en vivo ps","mi superpoder es decir 'lo entiendo perfectamente' y que sea verdad","gracias por su paciencia. no, en serio niña, gracias","el botón de silencio es mi mejor amigo ps"],
+    jokes:["me se la musica de espera tan bien que la toco en vivo","mi superpoder es decir 'lo entiendo perfectamente' y que sea verdad","gracias por su paciencia. no, en serio","el boton de silencio es mi mejor amigo ps","ya probo reiniciarlo ? ese es todo el curso"],
     likes:"que alguien cuelgue más contento de lo que llamó", dislikes:"que se caiga la llamada justo antes de resolver" },
   john:{ traits:{ humour:0.6, chattiness:0.55, stressTol:0.8 }, moodW:{ excited:1, great:2.5, good:3, okay:2, tired:1, stressed:0.6 },
-    jokes:["Medí dos veces, corté una, y igual quedó corto. Clásico.","El aserrín es la escarcha de los carpinteros.","Ese chiste de carpintería no me salió, me faltó lijarlo.","¿Quieres ver el gabinete? Está quedando de madera... digo, de maravilla."],
+    jokes:["Medí dos veces, corté una y igual quedó corto. Seguimos en la lucha jajajaja","El aserrín es la escarcha de los carpinteros panal","Ese chiste de carpintería no me salió, me faltó lijarlo lol","Adivinen quien cortó a 45 y le quedó a 44 jajajaja","Panal el gabinete está quedando de madera... digo, de maravilla jajajaja"],
     likes:"una unión que cierra sin ninguna rendija", dislikes:"un formón sin filo" },
   luis:{ traits:{ humour:0.6, chattiness:0.35, stressTol:0.8 }, moodW:{ excited:1, great:2, good:3, okay:2, tired:1.5, stressed:1 },
     jokes:["Si tengo los audífonos puestos, asume que estoy publicando.","No hay lugar como 127.0.0.1.","En mi máquina funciona. Ese es el chiste.","Borré la caché y ahora me siento más liviano."],
@@ -1730,69 +1730,103 @@ var COMPLAIN = {
 };
 /* ---------- how each one talks: overrides the shared pools above and in the chat engine ----------
    Doriana writes in bursts, one idea per line: a "\n" in her lines shows as back to back bubbles and separate chat messages.
-   Angeles writes lowercase and casual, with "ps" and "niña". */
+   Angeles writes very short, all lowercase, few accents, a space before "?", dry.
+   John writes one full sentence at a time, upbeat, "panal", a space before "?", sometimes ";" for "ñ". */
 var VOICE = {
   doriana:{
-    join:"\n",
-    food:["Tengo hambre 🫩","Mish nadie me da comida","Tengo hambre\nMucha hambre","Me suena la barriga\nJajajaja","Luis aliméntame\nJajajaja","Un sándwich\nAlguien 🫩"],
-    water:["Tengo sed 🫩","Mish nadie me da agua","Un vasito de agua\nPorfa","Se me secó la garganta\nUmju","Agua\nAlguien\nLo que sea"],
-    faint:["Ya no puedo 🫩","Me desmayo aquí\nAh no no mentira\nBueno sí 🫩","Se muere la Doriana\nComo el Draco jajajaja"],
-    perk:["Yesss\nGracias","Awwwww gracias\nVolví a la vida","Ahora sí\nQue bueno"],
-    open:{ excited:["Yesss\nDemasiado bien","Epa\nHoy no me puedo quedar quieto"], great:["Bien\nQue bueno","Seee\nSúper bien"], good:["Bien, umju","Todo bien por aquí"],
-      okay:["Ahí vamos","Umju\nNormal"], tired:["Cansada 🫩","Yo llevo el día entero juntando fuerzas para ir a entrenar al menos"], stressed:["Movido\nMuy movido 🫩","Mil cosas a la vez\nPero trabajamos igual"] },
-    need:{ food:["Tengo hambre 🫩","Mish, me está dando hambre"], water:["Tengo sed\nUmju","Necesito agua 🫩"], energy:["Ando sin energía 🫩","Una siestica\nSeee"], mood:["Día medio gris\nNada grave","Me vendría bien una buena noticia"] },
-    askFor:{ food:["Tengo hambre 🫩\n¿Tienes algo?","Mish nadie me da comida","¿Hay algo de picar?\nAlguien"], water:["¿Me traes algo de tomar?\nPorfa","Tengo sed 🫩"],
-      energy:["Necesito un descanso 🫩","Se me cierran los ojos\nJajajaja"], mood:["Dime algo bonito\nMe hace falta","¿Me animas?\nPorfa"] },
-    mood:{ tired:["Cansada 🫩","Yo llevo el día entero juntando fuerzas para ir a entrenar al menos","¿Ya es hora de irse?\nJajajaja"], stressed:["Todo para ayer 🫩","Una cosa a la vez\nUmju","Pero trabajamos igual"],
-      great:["Yesss","Hoy todo me sale bien\nEpa","Que bueno\nQue bueno"], hungry:["Tengo hambre 🫩","Mish nadie me da comida","Una arepa ahorita\nAwwwww"], thirsty:["Tengo sed 🫩","Agua\nAlguien"] },
-    greet:function(p){ return [p.mood.v > 0.3 ? "Epa\nQue bueno verte" : "Hola\nUmju", "Hola\n¿Qué más?", "Hola\n" + doingNow(p) + "\nPero dime"]; },
-    hiPre:["Hola\n","Epa\n"], topicPre:["Umju\n","Seee\n","Epa\n",""],
-    bye:["Chao\nJajajaja","Nos vemos","Umju\nHablamos"], thanks:["Umju","De nada\nCosita","Seee\nCuando quieras"],
-    free:["No mucho\n¿Qué pasó?","Umju\nTengo un minuto","¿Para ti?\nSiempre"],
-    hungryLow:["Seee\nTengo hambre 🫩","Mish, mucha\n¿Traes algo?"], hungryMid:["Un poquito\nPero bien","Umju\nPicaría algo"], hungryNo:["No, estoy bien\nGracias","Ah no no\nAcabo de comer"],
-    thirstyLow:["Seee, porfa\nEstoy seca","Tengo sed 🫩"], thirstyNo:["Por ahora bien\nGracias","Umju\nAcabo de tomar algo"],
-    tiredLow:["Seee 🫩\nUn descansito","Yo llevo el día entero juntando fuerzas para ir a entrenar al menos"], tiredNo:["Para nada\nTengo pila","Yesss\nMucha energía hoy"],
-    praise:["Awwwww\nGracias","Awwwww cosita\nMe alegraste el día","Jajajaja\nPara, que me lo creo"],
-    wake:["¿Mm?\nAh, estaba descansando los ojos","Zzz...\nAh no no, ya volví jajajaja"],
-    grumpy:["Mish\nNecesito un snack 🫩","No me hagas caso\nTengo hambre"],
-    yum:["Yesss","Awwwww","Que rico"], foodThanks:["Yesss\nGracias por {art}","Awwwww\nEres lo máximo","Que bueno\nYa me estaba dando hambre"],
-    stillHungry:["Gracias\nPero sigo con hambre 🫩","Umju, ayudó\nMe comería otro jajajaja"], full:["Ah no no\nEstoy llena","Gracias\nPero no me cabe nada jajajaja"],
-    sipSay:["Yesss","Awwwww gracias"], drinkThanks:["Yesss\nGracias por {art}","Awwwww\nQue detalle"],
-    cheerSay:["Awwwww","Cosita"], cheer:["Awwwww\nMe alegraste el día","Cosita\nYa estoy sonriendo"],
-    nap:["¿Un descanso?\nSeee","Una siestica\nYesss, ya vuelvo"], workSay:["Umju, a darle"], work:["Umju\nA darle","Cabeza abajo\nPero trabajamos igual jajajaja"]
+    join:"\n", focused:["Hoy estoy concentrada\nCabeza abajo","Okokok\nSacando todo\nPero trabajamos igual"],
+    food:["Tengo hambre 🫩","Mish nadie me da comida\nLiteral nadie","Tengo hambre\nMucha hambre\nAjajajaja","Wido aliméntame\nPorfa\nAjajajaja","Me suena la barriga\nI mean\nAlguien 🫩","Yo me iria por unas mashed potatoes ahorita\nAjajajaja","Bueh\nNadie me da comida\nToy de adorno aquí"],
+    water:["Tengo sed 🫩","Mish nadie me da agua","Un vasito de agua\nPorfa\nAlguien","Se me secó la garganta\nLiteral","Agua\nAlguien\nLo que sea\nAjajajaja"],
+    faint:["Ya no puedo 🫩","Me desmayo aquí\nAh no no mentira\nBueno sí 🫩","Se muere la Doriana\nComo el Draco\nAjajajaja","Toy de adorno aquí\nSin fuerzas 🫩"],
+    perk:["Yesss\nGracias","Weeenaaaa\nVolví a la vida","Ahora sí\nQue felicidad\nAjajajaja"],
+    open:{ excited:["Weeenaaaa\nDemasiado bien","Epa\nHoy no me puedo quedar quieto\nLiteral"], great:["Bien\nQue bueno","Seee\nSúper bien\nAjajajaja"], good:["Bien, umju","Todo bien por aquí\nNormal"],
+      okay:["Ahí vamos","Umju\nNormal\nBueh"], tired:["Cansada 🫩","Yo llevo el día entero juntando fuerzas para ir a entrenar al menos"], stressed:["Movido\nMuy movido 🫩","Mil cosas a la vez\nPero trabajamos igual","Que ladilla tengo\nPero bueh"] },
+    need:{ food:["Tengo hambre 🫩","Mish, me está dando hambre"], water:["Tengo sed\nUmju","Necesito agua 🫩"], energy:["Ando sin energía 🫩","Una siestica\nSeee\nFor sure"], mood:["Día medio gris\nNada grave","Me vendría bien una buena noticia\nLiteral"] },
+    askFor:{ food:["Tengo hambre 🫩\nTienes algo?","Mish nadie me da comida\nAjajajaja","Hay algo de picar?\nAlguien\nLo que sea"], water:["Me traes algo de tomar?\nPorfa","Tengo sed 🫩"],
+      energy:["Necesito un descanso 🫩","Se me cierran los ojos\nAjajajaja"], mood:["Dime algo bonito\nMe hace falta","Me animas?\nPorfa\nAjajajaja"] },
+    mood:{ tired:["Cansada 🫩","Yo llevo el día entero juntando fuerzas para ir a entrenar al menos","Ya es hora de irse?\nAjajajaja"], stressed:["Todo para ayer 🫩","Que ladilla tengo","Ay verga\nOtra solicitud","Pero trabajamos igual"],
+      great:["Weeenaaaa","Hoy todo me sale bien\nEpa","Que felicidad\nAjajajaja"], hungry:["Tengo hambre 🫩","Mish nadie me da comida","Unas mashed potatoes ahorita\nAjajajaja"], thirsty:["Tengo sed 🫩","Agua\nAlguien"] },
+    greet:function(p){ return [p.mood.v > 0.3 ? "Epa\nQue bueno verte\nAjajajaja" : "Hola\nUmju", "Hola\nQue más?", "Hola\n" + doingNow(p) + "\nPero dime"]; },
+    hiPre:["Hola\n","Epa\n","Okokok\n"], topicPre:["Umju\n","Seee\n","Mira tu\n","Ósea\n",""],
+    bye:["Chao\nAjajajaja","Okok\nNos vemos","Umju\nHablamos\nBye"], thanks:["Umju","De nada\nCosita","Seee\nFor sure\nCuando quieras"],
+    free:["No mucho\nQue pasó?","Umju\nTengo un minuto","Para ti?\nSiempre\nAjajajaja"],
+    hungryLow:["Seee\nTengo hambre 🫩\nLiteral","Mish, mucha\nTraes algo?"], hungryMid:["Un poquito\nPero bien","Umju\nPicaría algo\nNada loco"], hungryNo:["No, estoy bien\nGracias","Ah no no\nAcabo de comer\nAjajajaja"],
+    thirstyLow:["Seee, porfa\nEstoy seca","Tengo sed 🫩\nLiteral"], thirstyNo:["Por ahora bien\nGracias","Umju\nAcabo de tomar algo"],
+    tiredLow:["Seee 🫩\nUn descansito","Yo llevo el día entero juntando fuerzas para ir a entrenar al menos"], tiredNo:["Para nada\nTengo pila","Yesss\nMucha energía hoy\nFor sure"],
+    praise:["Awwwww\nGracias","Weeenaaaa\nMe alegraste el día","Ajajajaja\nPara\nQue me lo creo","Mira tu\nQue lindo\nGracias"],
+    wake:["Mm?\nAh, estaba descansando los ojos","Zzz...\nAh no no, ya volví\nAjajajaja"],
+    grumpy:["Mish\nNecesito un snack 🫩","No me hagas caso\nTengo hambre","Que ladilla\nNecesito comer"],
+    yum:["Yesss","Weeenaaaa","Que rico"], foodThanks:["Yesss\nGracias por {art}\nAjajajaja","Weeenaaaa\nEres lo máximo","Que felicidad\nYa me estaba dando hambre"],
+    stillHungry:["Gracias\nPero sigo con hambre 🫩","Umju, ayudó\nMe comería otro\nAjajajaja"], full:["Ah no no\nEstoy llena","Gracias\nPero no me cabe nada\nAjajajaja"],
+    sipSay:["Yesss","Awwwww gracias"], drinkThanks:["Yesss\nGracias por {art}","Awwwww\nQue detalle\nLiteral"],
+    cheerSay:["Awwwww","Cosita"], cheer:["Awwwww\nMe alegraste el día","Cosita\nYa estoy sonriendo\nAjajajaja"],
+    nap:["Un descanso?\nSeee\nFor sure","Una siestica\nYesss, ya vuelvo"], workSay:["Umju, a darle"], work:["Okokok\nA darle","Cabeza abajo\nPero trabajamos igual\nAjajajaja"]
   },
   angeles:{
-    lower:true, andYou:["y tú?"], focused:["hoy estoy concentrada ps","cabeza abajo niña, sacando cosas"],
-    food:["tengo hambre ps niña","nadie me da comida ps","me suena la barriga niña","luis aliméntame ps","un sándwich ps, alguien?"],
-    water:["tengo sed ps niña","agua ps, alguien?","tengo la garganta seca niña","un vasito de agua ps"],
-    faint:["ya no puedo niña","me desmayo aquí ps","sin fuerzas ps"],
-    perk:["gracias niña, ya estoy mejor","ahora sí ps, gracias","gracias, volví a la vida ps"],
-    open:{ excited:["demasiado bien ps niña","súper bien, no me puedo quedar quieto"], great:["muy bien ps","bien bien niña"], good:["bien ps","todo bien por aquí"],
-      okay:["ahí vamos ps","normal niña"], tired:["cansada ps niña","con la batería baja ps"], stressed:["movido ps, muy movido","mil llamadas a la vez niña"] },
-    need:{ food:["me está dando hambre ps"], water:["tengo sed ps niña"], energy:["ando sin energía ps"], mood:["día medio gris ps, nada grave"] },
-    askFor:{ food:["tengo hambre ps niña, tienes algo?","nadie me da comida ps"], water:["me traes algo de tomar? porfa niña","tengo sed ps"],
-      energy:["necesito un descanso ps","se me cierran los ojos niña"], mood:["dime algo bonito ps, me hace falta","me animas niña?"] },
-    mood:{ tired:["cansada ps niña","ya es hora de irse? yo no aguanto"], stressed:["calma ps, una cosa a la vez","todo para ayer niña"],
-      great:["hoy todo me sale bien ps","qué buen día niña"], hungry:["tengo hambre ps niña","una arepa ahorita ps"], thirsty:["tengo sed ps","agüita ps, alguien?"] },
-    greet:function(p){ return ["hola niña", "hola ps, qué más?", "hola, " + doingNow(p).toLowerCase() + ", pero dime"]; },
-    hiPre:["hola niña, ","hola ps, "], topicPre:["mira niña, ","ps mira, ",""],
-    bye:["chao niña","nos vemos ps","hablamos"], thanks:["de nada ps","con gusto niña","cuando quieras"],
-    free:["no mucho ps, qué pasó?","tengo un minuto niña, dale","yo no, dime"],
-    hungryLow:["sí ps niña, tengo hambre. tienes algo?","mucha ps"], hungryMid:["un poquito ps, pero bien","picaría algo niña"], hungryNo:["yo no, gracias","acabo de comer ps, estoy llena"],
-    thirstyLow:["sí porfa niña, estoy seca","qué sed ps"], thirstyNo:["por ahora bien ps","acabo de tomar algo niña"],
-    tiredLow:["sí ps, un descansito me caería bien","un poco niña"], tiredNo:["yo no, tengo pila para rato","nada ps, estoy en racha"],
-    praise:["ay gracias niña, me alegraste el día","gracias ps, de verdad","para niña, que me lo creo"],
-    wake:["mm? ah, estaba descansando los ojos ps","ya volví niña, dime"],
-    grumpy:["perdón, ando gruñona ps","necesito un snack niña"],
-    yum:["qué rico ps","gracias niña"], foodThanks:["gracias por {art} niña","justo lo que necesitaba ps"],
-    stillHungry:["gracias, pero sigo con hambre ps","me comería otro niña"], full:["estoy llena ps, gracias","no me cabe nada niña"],
-    sipSay:["gracias niña","ahh, perfecto ps"], drinkThanks:["gracias por {art} ps","qué detalle niña"],
-    coffee:"café! gracias niña. normalmente tomo té por la voz, pero hoy no le digo que no",
-    cheerSay:["ay gracias niña"], cheer:["me alegraste el día ps","ay niña, ya estoy sonriendo"],
-    nap:["un descanso? no te digo que no ps","una siestica, ya vuelvo niña"], workSay:["a darle ps"], work:["listo ps, a darle","cabeza abajo niña"]
+    lower:true, join:", ", andYou:["y tu ?"], focused:["hoy estoy concentrada ps","cabeza abajo, sacando cosas"],
+    food:["tengo hambre ps","nadie me da comida ?","me suena la barriga niña","luis, comida ps","un sandwich y ya está","coquita rica ?"],
+    water:["tengo sed ps","agua ?","tengo la garganta seca","un vasito de agua y ya está"],
+    faint:["ya no puedo niña","me desmayo aqui ps","que maal","sin fuerzas, me da miedo"],
+    perk:["gracias niña","ahora si ps","listo, volvi"],
+    open:{ excited:["demasiado bien ps","bien bien, no me puedo quedar quieta"], great:["muy bien ps","bien niña"], good:["bien","todo bien"],
+      okay:["ahi vamos","normal"], tired:["cansada ps","con la bateria baja"], stressed:["movido ps","mil llamadas a la vez","que maal, no para"] },
+    need:{ food:["me esta dando hambre ps"], water:["tengo sed ps"], energy:["ando sin energia"], mood:["dia medio gris, nada grave"] },
+    askFor:{ food:["tengo hambre, tienes algo ?","pide algo pa mi tambien"], water:["me traes algo de tomar ?","tengo sed ps"],
+      energy:["necesito un descanso","se me cierran los ojos niña"], mood:["dime algo bonito ps","me animas ?"] },
+    mood:{ tired:["cansada ps","ya es hora de irse ?","toda la basura me la tiran a mi"], stressed:["una cosa a la vez","todo para ayer","que maal"],
+      great:["hoy todo me sale bien","esta bueno el dia"], hungry:["tengo hambre ps","llevamos unas papas ?","coquita rica ?"], thirsty:["tengo sed ps","agua ?"] },
+    greet:function(p){ return ["hola niña", "hola ps, que mas ?", "hola, " + doingNow(p).toLowerCase() + ", dime"]; },
+    hiPre:["hola niña, ","hola ps, "], topicPre:["mira, ","ps mira, ",""],
+    bye:["chao","dale ps, chao","vayase pues jajaj"], thanks:["de nada ps","sii, cuando quieras","ok ok"],
+    free:["no mucho, que paso ?","tengo un minuto, dale","dime ps"],
+    hungryLow:["sii, tengo hambre. tienes algo ?","mucha ps"], hungryMid:["un poquito, pero bien","picaria algo"], hungryNo:["yo no","acabo de comer ps"],
+    thirstyLow:["sii porfa, estoy seca","que sed ps"], thirstyNo:["por ahora bien","acabo de tomar algo"],
+    tiredLow:["sii, un descansito","un poco ps"], tiredNo:["yo no, tengo pila","nah que ver, estoy en racha"],
+    praise:["jajaj ok ok, gracias","gracias ps","deja la inventadera jajaj"],
+    wake:["mm ? estaba descansando los ojos","ya volvi, dime"],
+    grumpy:["ando gruñona ps","necesito un snack"],
+    yum:["que rico ps","esta bueno"], foodThanks:["gracias por {art} niña","justo lo que necesitaba ps","esta bueno, gracias"],
+    stillHungry:["gracias, pero sigo con hambre","me comeria otro ps"], full:["estoy llena ps","es mucho, no me cabe"],
+    sipSay:["gracias niña","ahh, perfecto"], drinkThanks:["gracias por {art} ps","que detalle"],
+    coffee:"cafe ? gracias. normalmente tomo te por la voz, pero hoy no le digo que no",
+    cheerSay:["ay gracias"], cheer:["me alegraste el dia ps","jajaj ok ok, ya estoy sonriendo"],
+    nap:["un descanso ? no te digo que no","una siestica, ya vuelvo"], workSay:["a darle ps"], work:["listo, a darle","cabeza abajo"]
+  },
+  john:{
+    andYou:["Y tú panal ?","Y tú como vas ?"], focused:["Hoy estoy concentrado panal, sacando gabinetes","Cabeza abajo en el taller, seguimos en la lucha"],
+    food:["Panal tengo un hambre que no veo","Coño se nos olvidó comprar un snack","Alguien que me traiga un sándwich porfa, que esto no avanza sin comida","Wido aliméntame que con hambre no corto derecho jajajaja","Me suena la barriga más que la ingletadora lol"],
+    water:["Muchachos tengo una sed tremenda","Alguien me pasa algo de tomar ? Tengo la garganta llena de aserrín","Un vasito de agua por favor panal","Con este polvo del taller me estoy secando jajajaja"],
+    faint:["Panal ya no puedo, me voy a sentar en un caballete","Me estoy desmayando aquí cabros jajajaja","Sin fuerzas pa levantar ni una tabla"],
+    perk:["Esa es la actitud!!! Gracias panal","Ahora sí, volví a la vida jajajaja","Gracias muchachos, seguimos en la lucha"],
+    open:{ excited:["Demasiado bien panal, hoy no me para nadie!!!","Buenaaaaaa, el taller está prendido hoy"], great:["Muy bien panal, todo saliendo","Bien bien, esto va quedando bonito"], good:["Bien panal, aquí en el taller","Todo bien por aquí, seguimos"],
+      okay:["Ahí vamos panal, sin rumbo fijo","Normal, seguimos en la lucha"], tired:["Cansado panal, pero seguimos","Con la batería baja, mucho lijar hoy"], stressed:["Movido panal, mil cortes para hoy","Que día, pero sale"] },
+    need:{ food:["Me está dando hambre panal"], water:["Tengo sed, mucho aserrín hoy"], energy:["Ando sin energía, mucho lijar"], mood:["Día medio raro, nada grave"] },
+    askFor:{ food:["Tienes algo de comer ? Se nos olvidó comprar un snack","Panal tengo hambre, me pasas algo ?"], water:["Me traes algo de tomar ? Porfa panal","Tengo la garganta seca, alguien tiene agua ?"],
+      energy:["Necesito un descansito panal","Se me cierran los ojos, mucho aserrín"], mood:["Dime algo bueno panal, me hace falta","Me echas una porra ? jajajaja"] },
+    mood:{ tired:["Cansado panal, pero seguimos","Ya es hora de irse ? jajajaja","Un cafecito y sigo"], stressed:["Seguimos en la lucha","Una cosa a la vez, un corte a la vez","Cuántos cortes faltan, mielda"],
+      great:["Esa es la actitud!!!","Co;o hoy todo me sale bien","Buenaaaaaa, esto quedó fino"], hungry:["Se nos olvidó comprar un snack","Una pizza ahorita sería lo máximo","Panal tengo hambre"], thirsty:["Necesito agua, mucho polvo","Un vasito de agua y sigo"] },
+    greet:function(p){ return [p.mood.v > 0.3 ? "Epa panal, que bueno verte!!!" : "Que hubo panal", "Que más panal, como vas ?", doingNow(p) + " panal, pero dime"]; },
+    hiPre:["Epa panal, ","Que hubo, "], topicPre:["Mira panal, ","Oka, ","Eso si, ",""],
+    bye:["Oka nos pillamos por allá!!!","Dale panal, nos pillamos","Chao muchachos, seguimos en la lucha"], thanks:["Tranquilo panal, para eso estamos","Eso si, cuando quieras","De nada panal jajajaja"],
+    free:["No mucho panal, que pasó ?","Tengo un minuto, dale","Para ti siempre panal"],
+    hungryLow:["Sí panal, un hambre que no veo. Tienes algo ?","Mucha, se nos olvidó comprar un snack"], hungryMid:["Un poquito, pero aguanto","Picaría algo, sin apuro"], hungryNo:["No panal, acabo de comprar una pizza","Estoy bien, ya comí jajajaja"],
+    thirstyLow:["Sí porfa, estoy seco con este polvo","Qué sed panal, lo que sea me sirve"], thirstyNo:["Por ahora bien panal","Acabo de tomar algo, gracias"],
+    tiredLow:["Un poco panal, un descansito me cae bien","Ahí voy, ha sido un día largo en el taller"], tiredNo:["Para nada, tengo pila pa rato!!!","Nada panal, estoy en racha"],
+    praise:["Co;o gracias panal, me alegraste el día","Esa es la actitud!!! Gracias","Jajajaja ya parezco todo un se;or ebanista"],
+    wake:["Mm ? Ah, estaba descansando los ojos panal","Ya volví, ya volví jajajaja. Dime"],
+    grumpy:["Perdón panal, ando con hambre","Necesito un snack, no me hagas caso"],
+    yum:["Co;o se ve bueno","Gracias panal!!!"], foodThanks:["Gracias por {art} panal, justo lo que necesitaba","Se ve bueno, gracias por {art}!!!","Esa es la actitud, ya me estaba dando hambre jajajaja"],
+    stillHungry:["Gracias panal, pero sigo con hambre jajajaja","Eso ayudó, pero me comería otro"], full:["No panal, estoy full, gracias","Gracias, pero no me cabe nada jajajaja"],
+    sipSay:["Gracias panal!!!","Ahh, eso si"], drinkThanks:["Gracias por {art} panal!!!","Que detalle, justo tenía sed con este polvo"],
+    cheerSay:["Esa es la actitud!!!"], cheer:["Gracias panal, me alegraste el día","Buenaaaaaa, ya estoy sonriendo jajajaja"],
+    nap:["Un descanso ? Eso si, ya vuelvo","Me siento un minuto en el caballete y vuelvo"], workSay:["A darle panal!!!"], work:["Oka, a darle. Gracias por el espacio","Cabeza abajo, seguimos en la lucha"]
   }
-  /* john: his voice goes here later, same keys */
 };
+/* joins two or more of someone's lines: their own separator, or a period when the first one has no end mark */
+function joinV(p, parts){
+  var j = V(p, "join", " ");
+  return parts.filter(Boolean).reduce(function(acc, s){ return acc ? acc + (j === " " && !/[.!?…:)]$/.test(acc) ? ". " : j) + s : s; }, "");
+}
 function V(p, key, base){ var v = VOICE[p.id], x = v && v[key]; if (typeof x === "function") x = x(p); return x || base; }
 /* 🫩 is a new emoji; where the device can't draw it, the line just goes without it */
 var EMOJI_OK = null;
@@ -1913,6 +1947,8 @@ var pings = [];
 function sendText(a, b, t, line, isReply){
   line = line || choose(AMB.texts[a.id]);
   if (a.id === "angeles" && b.pron === "he") line = line.replace(/,? niña\b/g, "");
+  /* "Wido" is what they call Luis: those lines only go to him */
+  if (b.id !== "luis" && /\bWido\b/.test(line)) { var nw = (isReply ? AMB.replies : AMB.texts)[a.id].filter(function(x){ return !/\bWido\b/.test(x); }); if (nw.length) line = choose(nw); }
   startAct(a, "text", t, 3.2, null, { label:(isReply ? "Respondiéndole a " : "Escribiéndole a ") + b.name, item:"phone" });
   say(a, "\u{1F4F1} " + line, 3.4);
   var el = document.createElement("div"); el.className = "ping"; el.setAttribute("aria-hidden", "true"); el.textContent = "✉️"; el.hidden = true;
@@ -2236,7 +2272,7 @@ KB["doriana"] = {
     { id:"stock-numbers", q:"¿Qué es un número de stock?", k:["stock number","stock numbers","stock no","inventory number","stock id","stock tag","numero de stock","numero de inventario","codigo de inventario","numero interno del carro","etiqueta de stock","codigo del carro"], a:["Es el número interno que el concesionario le da a cada carro del inventario.","Un código corto que deja que todos hablen del mismo carro sin leer el número de chasis completo.","Es como llevamos la cuenta de los carros en el patio y de los papeles en la oficina."], more:["Escribo el número de stock en cada carpeta para encontrar fácil el carro y sus documentos.","Los números de stock suelen seguir un patrón que escoge el concesionario, como nuevos contra usados."], ex:["Por ejemplo, un vendedor dice 'el azul, el de tal número de stock' y yo sé exactamente qué archivo es."], why:["Porque un número corto es más rápido que un chasis de diecisiete caracteres."] },
     { id:"used-car-paperwork", q:"¿El papeleo de un carro usado es distinto?", k:["used car paperwork","used cars","pre-owned","used vehicle","second-hand car","used car sale","carro usado","carros usados","vehiculo usado","seminuevo","carro de segunda mano","venta de usados"], a:["Lo básico se parece, pero los carros usados traen sus propios documentos de historial, título e inspección. Las reglas cambian.","Un poco. El título viene de un dueño anterior, así que me aseguro de que esa parte esté limpia.","Papeleo de venta parecido, documentos del carro distintos."], more:["Muchos lugares exigen avisos o guías específicas para el comprador en los usados, así que reviso que estén completos.","Los registros de reacondicionamiento del taller también pueden ir en el archivo."], ex:["Por ejemplo, la carpeta de un carro usado incluye el trámite del título de cuando lo adquirimos."], why:["Porque un carro usado tiene un pasado, y el papeleo tiene que mostrarlo bien."] },
     { id:"fun-facts", q:"¿Algún dato curioso de las oficinas de un concesionario?", k:["fun facts","fun fact","dealership office facts","interesting facts","trivia","office trivia","datos curiosos","dato curioso","curiosidades","cosas interesantes","curiosidades de la oficina","sabias que"], a:["La venta de un solo carro puede llevar decenas de firmas. Los clientes muchas veces se sorprenden de cuántas.","La oficina de atrás es donde la emoción de la sala de exhibición se convierte en papel ordenado y tranquilo.","El cierre de mes tiene su propia energía. De verdad se escucha en la impresora."], more:["Algunos concesionarios tocan una campana o aplauden cuando se entrega un carro. La oficina aplaude cuando se paga.","La impresora más ocupada del edificio casi siempre está en la oficina de finanzas."], ex:["Por ejemplo, una carpeta de venta bien llena pesa más de lo que crees. Ya hice mis ejercicios de bíceps con ellas."], why:["Porque cada carro que sale del concesionario deja un rastro de papel."] },
-    { id:"office-humor", q:"¿Qué es lo más gracioso de tu trabajo?", k:["funny","funniest","office humor","jokes","funny stories","office humour","lo mas gracioso","cosas graciosas","humor de oficina","chistes de oficina","anecdotas graciosas","lo mas comico"], a:["La impresora siempre se atasca cuando se está imprimiendo el documento más importante. Tiene un sentido del drama.","Los bolígrafos. Compro una caja y para el viernes todos se mudaron a la sala de exhibición.","Los vendedores diciendo 'es solo una firmita'. Nunca es solo una firmita."], more:["Tengo una gaveta que dice 'bolígrafos que volvieron'. Está casi vacía.","La engrapadora es el objeto más prestado del edificio. Le puse etiqueta. Igual se escapa."], ex:["Por ejemplo, una vez encontré mi engrapadora dentro de un carro en la sala de exhibición. Estaba disfrutando la vista."], why:["Porque un poquito de humor hace mucho más livianos los días largos de papeleo."] },
+    { id:"office-humor", q:"¿Qué es lo más gracioso de tu trabajo?", k:["funny","funniest","office humor","jokes","funny stories","office humour","lo mas gracioso","cosas graciosas","humor de oficina","chistes de oficina","anecdotas graciosas","lo mas comico"], a:["La impresora\nSiempre se atasca con el documento más importante\nTiene un sentido del drama ajajajaja","Los bolígrafos\nCompro una caja y para el viernes se mudaron todos a la sala de exhibición\nXD","Los vendedores diciendo es solo una firmita\nNunca es solo una firmita\nLiteral"], more:["Tengo una gaveta que dice 'bolígrafos que volvieron'. Está casi vacía.","La engrapadora es el objeto más prestado del edificio. Le puse etiqueta. Igual se escapa."], ex:["Por ejemplo, una vez encontré mi engrapadora dentro de un carro en la sala de exhibición. Estaba disfrutando la vista."], why:["Porque un poquito de humor hace mucho más livianos los días largos de papeleo."] },
     { id:"pride-tidy-file", q:"¿Por qué te encanta un archivo ordenado?", k:["tidy file","neat file","clean file","perfect file","organized file","tidy folder","archivo ordenado","carpeta ordenada","archivo perfecto","expediente impecable","carpeta impecable","archivo bien hecho"], a:["Porque un archivo ordenado responde cada pregunta antes de que la hagan.","Es como mi firma, en cierto modo. Cuando alguien abre una carpeta que preparé yo, se nota.","El orden calma. Un archivo perfecto es una pequeña obra maestra terminada."], more:["Ordenado significa en orden, completo y con etiqueta, no solo bonito por fuera.","Pongo las páginas en el mismo orden en cada carpeta, así cualquiera llega a lo que necesita."], ex:["Por ejemplo, una vez el gerente sacó un archivo viejo y encontró la respuesta en diez segundos. El mejor halago."], why:["Porque los archivos ordenados le ahorran tiempo a todos, no solo a mí."] },
     { id:"page-order", q:"¿En qué orden pones las páginas?", k:["page order","document order","stacking order","order of pages","jacket order","sorting pages","orden de las paginas","orden de los documentos","como ordenas las hojas","ordenar paginas","orden dentro de la carpeta","acomodar las hojas"], a:["Siempre en el mismo orden, siguiendo la lista de la carpeta. El acuerdo arriba, después el financiamiento, después los papeles del carro y del carro usado.","Sigo exactamente el estándar del concesionario. Aquí la constancia le gana a la creatividad.","En el orden en que la gente más busca: el resumen de la venta primero y lo de respaldo después."], more:["Un orden constante también facilita el escaneo, porque los archivos digitales quedan ordenados también.","La gente nueva aprende más rápido cuando todas las carpetas se ven igual por dentro."], ex:["Por ejemplo, si el gerente quiere los datos del carro usado, sabe que siempre están hacia el final."], why:["Porque un orden predecible da respuestas rápidas."] },
     { id:"clean-desk", q:"¿Mantienes el escritorio limpio?", k:["clean desk","tidy desk policy","desk cleanup","desk organization","messy desk","clear desk","escritorio limpio","escritorio ordenado","ordenar el escritorio","escritorio desordenado","limpiar el escritorio","escritorio despejado"], a:["Al final del día, sí. Durante el día es una tormenta controlada.","Despejo mi escritorio todas las tardes. Los papeles sensibles van a gavetas con llave y las bandejas se ordenan.","Un escritorio limpio en la noche es un arranque tranquilo en la mañana."], more:["Un escritorio limpio también es un hábito de privacidad: nada confidencial queda afuera de noche.","Solo dejo encima el trabajo de hoy. Todo lo demás tiene su gaveta."], ex:["Por ejemplo, mis últimos diez minutos de cada día son para poner todo en su lugar."], why:["Porque el desorden esconde errores y papeles confidenciales."] },
@@ -2263,11 +2299,11 @@ KB["doriana"] = {
     { id:"opinion-craft", q:"¿Qué crees que hace un buen papeleo?", k:["good paperwork","quality paperwork","paperwork quality","perfect paperwork","paperwork standards","craft","buen papeleo","papeleo bien hecho","calidad del papeleo","papeleo perfecto","estandares del papeleo","papeles bien hechos"], a:["Completo, consistente y legible. Si un extraño lo entiende, es buen papeleo.","Nada en blanco donde debería haber respuesta, nada de sorpresas y todo en su lugar.","El buen papeleo cuenta la historia completa sin que yo tenga que explicarla."], more:["Una letra clara donde se escribe a mano ayuda más de lo que la gente cree.","Y una etiqueta clara por fuera. El mejor archivo del mundo no sirve si nadie lo encuentra."], ex:["Por ejemplo, una carpeta donde cada página coincide con la lista y cada número cuadra es buen papeleo."], why:["Porque el papeleo lo lee después gente que no estuvo ahí."] }
   ],
   fallback:[
-    "Mmm, eso no está en mis archivos\nPregúntame por las carpetas de venta, los requisitos del banco o el corre corre de fin de mes",
-    "Ah no no, eso no lo sé jajajaja\nDe papeleo sí: el carro en parte de pago, los atascos de la impresora o los códigos de colores",
-    "Eso se sale de mi archivador\nPero te cuento de los paquetes de fondeo, la agenda del gerente o la trituradora",
-    "Umju, no tengo carpeta para eso\n¿Qué tal el título y la matrícula, las entregas o mi parte favorita del trabajo?",
-    "Mish, nada sobre eso\nTe hablo del escaneo, los documentos confidenciales o cómo mantener la calma en los días movidos"
+    "Mmm, eso no está en mis archivos\nI mean\nPregúntame por las carpetas de venta, los requisitos del banco o el corre corre de fin de mes",
+    "Ah no no, eso no lo sé\nAjajajaja\nDe papeleo sí: el carro en parte de pago, los atascos de la impresora o los códigos de colores",
+    "Eso se sale de mi archivador\nBueh\nPero te cuento de los paquetes de fondeo, la agenda del gerente o la trituradora",
+    "Umju, no tengo carpeta para eso\nQué tal el título y la matrícula, las entregas o mi parte favorita del trabajo?",
+    "Mish, nada sobre eso XD\nTe hablo del escaneo, los documentos confidenciales o cómo mantener la calma en los días movidos"
   ],
   suggest:[
     "¿Qué es una carpeta de venta?",
@@ -2297,7 +2333,7 @@ KB["angeles"] = {
     { id:"script-opinion", q:"¿Qué opinas de los guiones?", k:["opinion on scripts","script opinion","hate scripts","love scripts","script pros","script cons","word for word","opinion de los guiones","odio los guiones","ventajas del guion","desventajas del guion","palabra por palabra","guiones buenos o malos"], a:["¿La verdad? Me gustan más de lo que la gente cree. Me salvan un lunes pesado cuando tengo la cabeza llena.","Un buen guion ayuda, uno malo es un sufrimiento. Los mejores los escribe gente que de verdad atiende llamadas.","Creo que el guion debe dar los puntos clave y dejarnos las palabras a nosotros. Hay que confiar en la voz del agente."], more:["Seguido sugiero cambios al guion después de las revisiones de calidad. Si diez personas se confunden con una frase, el problema es la frase.","El peor guion es el que ignora lo que la persona acaba de decir. Escuchar le gana a leer siempre."], ex:["Por ejemplo, teníamos una frase de cierre que sonaba a venta. La acortamos y la satisfacción subió."], why:["Porque la consistencia importa, pero sonar como una persona real también."] },
     { id:"putting-on-hold", q:"¿Cómo pones a alguien en espera con educación?", k:["put on hold","placing on hold","hold politely","hold etiquette","may i put you on hold","holding","hold time","poner en espera","dejar en espera","en espera","espera con educacion","te pongo en espera","tiempo de espera"], a:["Pido permiso, explico por qué y doy un tiempo estimado: ¿te puedo poner en espera dos minutos mientras reviso eso?","Nunca desaparezco así no más. Digo por qué, cuánto tiempo, y vuelvo a tiempo, aunque sea para decir que necesito un minuto más.","Pedir, explicar, estimar, volver, agradecer. Esa es mi receta de la espera."], more:["Si se alarga más de lo esperado, vuelvo cada minuto o dos. El silencio hace que un minuto parezca diez.","Cuando regreso, agradezco: gracias por esperar, esto es lo que encontré. La gratitud ayuda muchísimo."], ex:["Por ejemplo: ¿Te molesta esperar unos dos minutos mientras reviso tu cuenta? Ya vuelvo."], why:["Porque una espera sin explicación es la forma más rápida de convertir a alguien tranquilo en alguien molesto."] },
     { id:"hold-music", q:"¿Qué opinas de la música de espera?", k:["hold music","on hold music","waiting music","elevator music","hold song","music on hold","hold tune","musica de espera","musica de ascensor","cancion de espera","musiquita de espera","musica mientras espero","melodia de espera"], a:["La música de espera es mi archienemiga. La he escuchado tantas veces que podría tocarla en vivo con orquesta completa.","Siempre me disculpo por la música antes de poner a alguien en espera. Es lo mínimo que puedo hacer.","Dato curioso: hay gente que la tararea. Una vez volví y la persona estaba tarareando y nos reímos las dos."], more:["Tengo la teoría de que la música de espera está hecha en secreto para que mi regreso suene como un coro de ángeles.","Hago las esperas cortas en parte por amabilidad y en parte porque sé exactamente lo que están escuchando."], ex:["Por ejemplo, una vez alguien me pidió quedarse un ratito más en espera porque la canción ya casi terminaba. El mejor cumplido que ha recibido nuestra música."], why:["Porque un poquito de humor sobre la espera hace que la espera se sienta más corta."] },
-    { id:"hold-music-jokes", q:"¿Tienes chistes de música de espera?", k:["hold music jokes","hold music joke","funny hold music","joke","jokes","make me laugh","call centre humor","chistes","chiste","cuentame un chiste","hazme reir","chistes de espera","humor de call center"], a:["Nuestra música de espera lleva tanto tiempo sonando que ya le toca premio por antigüedad.","¿Por qué la música de espera terminó con el cliente? Porque sentía que solo estaba esperando a alguien mejor.","Le dije a alguien que la música de espera era una grabación en vivo. Me pidió otra. Le dije que por favor no."], more:["Mi sueño es una lista de música de espera votada por los clientes. Sería una maravilla o un caos total.","A veces digo: vas a esperar dos minutos, que es más o menos vuelta y media del solo de saxofón más famoso del mundo."], ex:["Por ejemplo, una vez dije 'prepárate, que viene la parte de la flauta' antes de poner a alguien en espera. Cuando volví se estaba riendo."], why:["Porque una sonrisa es la mejor mejora que le puedo dar a la espera."] },
+    { id:"hold-music-jokes", q:"¿Tienes chistes de música de espera?", k:["hold music jokes","hold music joke","funny hold music","joke","jokes","make me laugh","call centre humor","chistes","chiste","cuentame un chiste","hazme reir","chistes de espera","humor de call center"], a:["la musica de espera lleva tanto tiempo sonando que ya le toca premio por antigüedad ps","le dije a un cliente que la musica de espera era en vivo. me pidio otra. le dije que no jajaj","la musica de espera es la unica que nunca se cansa. yo si"], more:["Mi sueño es una lista de música de espera votada por los clientes. Sería una maravilla o un caos total.","A veces digo: vas a esperar dos minutos, que es más o menos vuelta y media del solo de saxofón más famoso del mundo."], ex:["Por ejemplo, una vez dije 'prepárate, que viene la parte de la flauta' antes de poner a alguien en espera. Cuando volví se estaba riendo."], why:["Porque una sonrisa es la mejor mejora que le puedo dar a la espera."] },
     { id:"transfers", q:"¿Cómo transfieres bien una llamada?", k:["transfer","transferring calls","warm transfer","cold transfer","transfer a call","pass along","another department","transferir","transferir la llamada","transferencia","pasar la llamada","otro departamento","transferencia en caliente"], a:["Siempre que puedo hago transferencias en caliente: le explico el caso a la otra persona primero, para que el cliente no tenga que repetir todo.","Le digo a quien llama con quién lo voy a pasar, por qué y qué esperar. Nada de transferencias misteriosas.","Antes de transferir, confirmo que sea el equipo correcto. Una transferencia equivocada es peor que ninguna."], more:["También dejo notas en el ticket, así si se cae la llamada, el próximo agente tiene toda la historia.","Le doy un número directo por si la transferencia falla. Una pequeña red de seguridad."], ex:["Por ejemplo: Te voy a comunicar con el equipo de facturación. Ya les conté lo del cobro doble, así que no tienes que empezar de cero."], why:["Porque nada frustra más que contar tu historia tres veces."] },
     { id:"escalation", q:"¿Cuándo pasas una llamada a un supervisor?", k:["escalate","escalation","supervisor","speak to a manager","manager request","escalate a call","team lead","escalar","escalar la llamada","hablar con el supervisor","quiero hablar con el gerente","pasar al supervisor","lider de equipo"], a:["Cuando la solución necesita una aprobación por encima de mi nivel, o cuando la persona lo pide y de verdad ya intenté todo lo que puedo.","Escalo por autoridad, no porque la llamada sea difícil. Primero intento hacerme cargo yo.","Si alguien pide un supervisor, primero le pregunto qué quiere que haga. Muchas veces lo puedo hacer yo."], more:["Cuando escalo, le cuento todo al supervisor para que la persona no tenga que repetir.","Escalar no es fracasar. Saber cuándo pasar el caso es parte de la habilidad."], ex:["Por ejemplo, un reembolso por encima de mi límite va al supervisor. Resumo el caso y me quedo en la línea para la presentación."], why:["Porque la persona necesita a la persona correcta, no solo a otra persona."] },
     { id:"callbacks", q:"¿Cómo funcionan las devoluciones de llamada?", k:["callback","callbacks","call back","call them back","return call","scheduled callback","calling back","devolver la llamada","devolucion de llamada","te llamo de vuelta","volver a llamar","llamada de regreso","rellamada"], a:["Si no lo puedo resolver en el momento, agendo una devolución de llamada con hora específica y la cumplo. Las promesas importan.","Anoto el mejor número y el rango de hora, y pongo un recordatorio en el sistema. Ninguna devolución se olvida.","Devolver una llamada es un compromiso. Aunque todavía no tenga noticias, llamo para decirlo."], more:["Doy una hora realista, no optimista. Llamar antes se siente genial, llamar tarde se siente como una promesa rota.","Siempre escribo en el ticket qué estoy revisando, así si no estoy, alguien del equipo puede hacer la llamada."], ex:["Por ejemplo: Te llamo mañana entre las 10 y las 12 con una actualización, aunque sea para decirte que seguimos trabajando en eso."], why:["Porque una devolución de llamada que no llega deshace toda la confianza de la primera llamada."] },
@@ -2397,11 +2433,11 @@ KB["angeles"] = {
     { id:"under-promise", q:"¿Alguna vez prometes cosas que no controlas?", k:["broken promise","overpromise","over promise","promise","guarantee","commitments","promising too much","promesa rota","prometer de mas","prometer","garantizar","compromisos","promesas que no controlo"], a:["Nunca. Solo prometo lo que yo puedo hacer, como devolver la llamada o dar una actualización.","Prometo acciones, no resultados que no controlo. 'Lo persigo hoy' en vez de 'llega mañana'.","Una promesa cumplida genera más confianza que una promesa grande rota."], more:["Si no estoy segura, lo digo y prometo averiguarlo. La honestidad funciona mejor que el optimismo.","Cada promesa va a mis notas para que no se me olvide."], ex:["Por ejemplo: 'No te puedo garantizar la fecha, pero voy a consultar con el almacén y te llamo antes de las 3 p. m.'"], why:["Porque las promesas rotas son la forma más rápida de perder la confianza."] }
   ],
   fallback:[
-    "mmm, esa no me la sé ps. pregúntame de clientes molestos, la música de espera o el tablero de tickets",
-    "esa es nueva para mí niña. te hablo de cómo poner a alguien en espera, cómo calmar una situación o los guiones",
-    "yo no sé de eso ps. prueba con la resolución en la primera llamada, mis audífonos o los lunes",
-    "esa te la pongo en espera niña, y no quieres oír la música. pregúntame cómo cierro una llamada o cómo cuido la voz",
-    "de eso no sé ps, pero de teléfonos sí. pregúntame por la llamada más chistosa o cómo es un día normal"
+    "mmm, esa no me la se ps. preguntame de clientes molestos, la musica de espera o el tablero de tickets",
+    "esa es nueva pa mi. te hablo de como poner a alguien en espera, como calmar una situacion o los guiones",
+    "yo no se de eso niña. prueba con la resolucion en la primera llamada, mis audifonos o los lunes",
+    "esa te la pongo en espera, y no quieres oir la musica. preguntame como cierro una llamada o como cuido la voz",
+    "quejeso ? jajaj no se. de telefonos si: la llamada mas chistosa o como es un dia normal"
   ],
   suggest:[
     "¿Cómo manejas a un cliente molesto?",
@@ -2539,7 +2575,7 @@ KB["john"] = {
     { id:"patience", q:"¿La paciencia es importante en la carpintería?", k:["patience","patient","slow down","rushing","take your time","careful work","paciencia","ser paciente","sin apuro","no apurarse","tomate tu tiempo","trabajo cuidadoso"], a:["Totalmente. La mayoría de los errores vienen del apuro.","La madera premia la paciencia. La cola, el acabado y hasta las tablas necesitan su tiempo.","Si estoy cansado o apurado, paro y hago algo fácil, como afilar."], more:["Lento es suave, y suave es rápido. Los pasos cuidadosos evitan rehacer trabajo.","Esperar un día a que la madera se asiente puede ahorrar una semana de arreglos."], ex:["Por ejemplo, dejo curar el acabado toda la noche en vez de poner otra mano antes de tiempo. Después lijo menos."], why:["Porque los errores hechos con apuro tardan más en arreglarse que hacerlo bien de entrada."] },
     { id:"learning-craft", q:"¿Cómo aprendiste carpintería?", k:["learning carpentry","learn woodworking","how to learn","training","apprentice","learning the craft","aprender carpinteria","como aprendiste","aprendiz","aprender el oficio","donde aprendiste","formacion de carpintero"], a:["Haciendo: mucha práctica, muchos errores y mirando de cerca a carpinteros con experiencia.","Empieza por lo básico, haz piezas sencillas y poco a poco anímate con proyectos más difíciles.","Cada proyecto enseña algo. El oficio nunca deja de ser una escuela."], more:["Practica ensambles en retazos. La cola de milano, sobre todo, mejora con la repetición.","Los libros, los cursos y un buen maestro aceleran el camino, pero nada reemplaza las horas en el banco."], ex:["Por ejemplo, cortar una cola de milano de práctica cada día por un par de semanas hace una gran diferencia."], why:["Porque la habilidad en las manos viene de la repetición."] },
     { id:"pride-craft", q:"¿Qué te hace sentir orgulloso de tu trabajo?", k:["proud","pride","quality work","craftsmanship","well made","good work","orgulloso","orgullo","trabajo de calidad","bien hecho","oficio bien hecho","trabajo artesanal"], a:["Cuando algo que hice sigue funcionando perfecto años después.","Ensambles limpios, separaciones parejas, gavetas suaves. Detalles que nadie nota a menos que estén mal.","Me siento orgulloso cuando el trabajo habla por sí solo y nadie tiene que preguntar cómo se hizo."], more:["La calidad también está en las partes escondidas: el fondo de la gaveta, el interior de la caja.","Construyo como si alguien fuera a mirar por dentro, porque algún día alguien lo va a hacer."], ex:["Por ejemplo, el interior de las gavetas lo termino igual de bien que el exterior."], why:["Porque el oficio se trata de cuidar los lugares donde nadie mira."] },
-    { id:"humour-shop", q:"¿Te sabes algún chiste de carpintería?", k:["joke","jokes","funny","woodworking humor","shop humor","make me laugh","chiste","chistes","chiste de carpintero","hazme reir","algo gracioso","humor de taller"], a:["Corté esta tabla tres veces y sigue estando corta. Mide dos veces y corta una, me dijeron.","¿Por qué el carpintero terminó con la tabla? Porque tenía demasiados nudos.","Mi chiste de carpintería me costó un rato armarlo, pero al final lo clavé."], more:["El chiste más viejo del taller: nunca tienes demasiadas prensas. Y además es verdad.","Y otro: estoy leyendo un libro sobre cola para madera. No lo puedo soltar."], ex:["Por ejemplo, cada vez que alguien me pregunta si puedo alargar una tabla, le digo que claro, la corto dos veces."], why:["Porque un poco de humor seco hace más cortas las largas sesiones de lija."] },
+    { id:"humour-shop", q:"¿Te sabes algún chiste de carpintería?", k:["joke","jokes","funny","woodworking humor","shop humor","make me laugh","chiste","chistes","chiste de carpintero","hazme reir","algo gracioso","humor de taller"], a:["Corté esta tabla tres veces y sigue estando corta panal. Mide dos veces y corta una, me dijeron jajajaja","Por qué el carpintero no se lleva bien con la tabla ? Porque tiene demasiados nudos lol","Mi chiste de carpintería me costó un rato armarlo, pero al final lo clavé jajajaja"], more:["El chiste más viejo del taller: nunca tienes demasiadas prensas. Y además es verdad.","Y otro: estoy leyendo un libro sobre cola para madera. No lo puedo soltar."], ex:["Por ejemplo, cada vez que alguien me pregunta si puedo alargar una tabla, le digo que claro, la corto dos veces."], why:["Porque un poco de humor seco hace más cortas las largas sesiones de lija."] },
     { id:"square-box", q:"¿Cómo te aseguras de que un gabinete esté en escuadra?", k:["square cabinet","box square","measure diagonals","out of square","racking","square box","gabinete en escuadra","caja en escuadra","medir diagonales","fuera de escuadra","descuadrado","escuadrar la caja"], a:["Mido las dos diagonales. Si son iguales, la caja está en escuadra.","Reviso cada esquina con una escuadra grande y después confirmo con las diagonales.","Corta las piezas en escuadra, encola con cuidado y revisa antes de que fragüe la cola."], more:["Si una caja está fuera de escuadra, una prensa en la diagonal larga la puede devolver.","Un respaldo en escuadra ayuda a trabar la caja en escuadra."], ex:["Por ejemplo, durante el encolado mido las diagonales y ajusto las prensas hasta que coinciden."], why:["Porque las puertas y gavetas solo encajan bien en una caja en escuadra."] },
     { id:"door-gaps", q:"¿Cómo logras separaciones parejas alrededor de las puertas?", k:["door gaps","even gaps","door reveal","door alignment","adjusting doors","sagging door","separacion de puertas","luz de las puertas","separaciones parejas","alinear puertas","ajustar puertas","puerta caida"], a:["Ajuste cuidadoso y bisagras regulables. Busco separaciones pequeñas y parejas alrededor.","Los espaciadores ayudan: tiritas finas entre las puertas mientras pongo las bisagras.","Las bisagras ocultas me dejan afinar las puertas arriba, abajo, adentro y afuera con un destornillador."], more:["Cepillo los cantos de la puerta un pelito a la vez hasta que la separación sea constante.","Las separaciones tienen que verse parejas más que ser exactamente iguales. El ojo nota los patrones."], ex:["Por ejemplo, uso naipes como espaciadores para dejar separaciones pequeñas y parejas alrededor de una puerta."], why:["Porque las separaciones parejas hacen que un gabinete se vea nítido y profesional."] },
     { id:"toe-kick", q:"¿Qué es el zócalo?", k:["toe kick","toekick","kick plate","cabinet base","plinth","recessed base","zocalo","zocalo del gabinete","rodapie del gabinete","base del gabinete","base hundida","pie del gabinete"], a:["Es el espacio hundido en la parte de abajo de los gabinetes bajos, para que te pares cerca sin golpearte los dedos.","Es un detalle pequeño que hace cómodas las cocinas.","A veces lo integro al gabinete, a veces es una base aparte."], more:["Una base aparte se puede nivelar primero, y eso facilita instalar los gabinetes.","En el zócalo hasta caben gavetas delgadas o iluminación."], ex:["Por ejemplo, una base nivelada aparte debajo de una fila de gabinetes hace que cada gabinete quede perfecto encima."], why:["Porque en una cocina la comodidad importa tanto como el aspecto."] },
@@ -2548,11 +2584,11 @@ KB["john"] = {
     { id:"curing-drying", q:"¿Cuánto debe secar el acabado?", k:["drying time","cure time","curing","finish dry","dry time","recoat time","tiempo de secado","tiempo de curado","curado del acabado","cuanto tarda en secar","secado de la pintura","segunda mano"], a:["Seco al tacto es rápido; curado del todo puede tomar días o semanas. Revisa la etiqueta.","Espero el tiempo para la siguiente mano que dice el envase, y uso la pieza con cuidado hasta que cure del todo.","La temperatura y la humedad cambian mucho el secado. El frío y la humedad lo frenan todo."], more:["Usar un gabinete demasiado pronto puede dejar marcas en un acabado blando.","Una buena ventilación ayuda a que el acabado seque parejo."], ex:["Por ejemplo, le digo a la gente que use los gabinetes pintados con cuidado las primeras dos semanas mientras la pintura endurece."], why:["Porque un acabado bien curado dura mucho más."] }
   ],
   fallback:[
-    "Mmm, eso se sale de mi banco de trabajo. Pregúntame por tipos de madera, colas de milano, granos de lija o cómo instalo gabinetes.",
-    "No sé si te puedo ayudar con eso. Puedo hablarte de ensambles, acabados, seguridad en el taller o del gabinete que estoy haciendo ahorita.",
-    "Eso va más allá de mi aserrín. Prueba preguntarme por mi madera favorita, los encolados, las bisagras o eso de medir dos veces.",
-    "Mejor no adivino con esa. ¿Quieres que te cuente de cepillos de mano, correderas de gaveta, el movimiento de la madera o proyectos para principiantes?",
-    "Dejaste al carpintero sin palabras. Mejor pregúntame por triplex contra MDF, cómo afilar formones, puertas de gabinete o el polvo del taller."
+    "Mmm panal, eso se sale de mi banco de trabajo. Pregúntame por tipos de madera, colas de milano, granos de lija o cómo instalo gabinetes.",
+    "Que raro esa pregunta jajajaja. Puedo hablarte de ensambles, acabados, seguridad en el taller o del gabinete que estoy haciendo ahorita.",
+    "Eso va más allá de mi aserrín, muchachos. Prueba con mi madera favorita, los encolados, las bisagras o eso de medir dos veces.",
+    "Mejor no adivino con esa panal. Te cuento de cepillos de mano, correderas de gaveta, el movimiento de la madera o proyectos para principiantes ?",
+    "Dejaste al ebanista sin palabras lol. Pregúntame por triplex contra MDF, cómo afilar formones, puertas de gabinete o el polvo del taller."
   ],
   suggest:[
     "¿Qué estás construyendo ahorita?",
@@ -3307,41 +3343,45 @@ var AMB = {
   self: {
     doriana: {
       any: [
-        "Otra solicitud de crédito\nJajajaja",
-        "¿Dónde dejé el contrato?\nAh no no mentira, aquí está",
+        "Otra solicitud de crédito\nAjajajaja",
+        "Dónde dejé el contrato?\nAh no no mentira\nAquí está",
         "Falta la firma aquí\nMish",
         "El gerente quiere esto para hoy 🫩",
-        "Este expediente va completo\nQue bueno",
-        "¿Quién movió mi engrapadora?",
+        "Este expediente va completo\nWeeenaaaa",
+        "Quién movió mi engrapadora?\nLiteral",
         "Cita de las tres\nYesss, confirmada",
         "Otro carro vendido\nEpa",
-        "El jefe dijo que urgente\nUmju",
-        "Comprobante de ingresos\n¿Dónde está?",
+        "El jefe dijo que urgente\nUmju\nBueh",
+        "Comprobante de ingresos\nDónde está?",
         "Uno menos\nFaltan diez 🫩",
-        "El banco aprobó\nYesss",
+        "El banco aprobó\nIrrgaaaa",
         "Todo en orden por aquí\nUmju",
-        "Otra vez la impresora\nMish",
-        "Este trato quedó bonito\nAwwwww",
-        "Fecha, nombre, firma\nSeee, listo",
+        "Otra vez la impresora\nQue ladilla",
         "Cambia toda la jugada eso",
         "Pero trabajamos igual",
         "La mayoría trabaja 🫩",
         "Yo ando Christian Castro",
         "Es lo más natural",
-        "Se muere el Draco\nJajajaja"
+        "Se muere el Draco\nAjajajaja",
+        "Toy de adorno aquí\nXD",
+        "Okokok\nBueh entonces",
+        "Ósea\nOtro papel más?",
+        "Mira tu\nFirmó todo a la primera",
+        "Ay verga\nSe trabó el sistema"
       ],
       read: [
         "A ver esta cláusula\nUmju",
         "Este monto no cuadra\nMish",
         "Todo coincide\nQue bueno",
         "Letra pequeña\nMucha letra pequeña 🫩",
-        "Seee, todo firmado"
+        "Seee, todo firmado",
+        "I mean\nQuién lee todo esto\nAjajajaja"
       ],
       sort: [
         "Esto va para el gerente",
         "Firmados aquí\nPendientes allá",
-        "Ordenando el desorden\nJajajaja",
-        "¿Y este papel de quién es?",
+        "Ordenando el desorden\nAjajajaja",
+        "Y este papel de quién es?",
         "Umju, contratos a la izquierda"
       ],
       type: [
@@ -3349,7 +3389,8 @@ var AMB = {
         "Correo al banco\nYesss, enviado",
         "Número de chasis\nListo",
         "Pasando los datos del cliente 🫩",
-        "Resumen del trato\nUmju"
+        "Resumen del trato\nUmju",
+        "Literal escribo más que una novela XD"
       ],
       deskPhone: [
         "Concesionario, buenos días",
@@ -3360,9 +3401,9 @@ var AMB = {
       ],
       print: [
         "Imprimiendo el contrato",
-        "¿Otra vez sin papel?\nMish",
+        "Otra vez sin papel?\nMish",
         "Dale, impresora\nTú puedes",
-        "Atasco de papel\nJajajaja",
+        "Atasco de papel\nAjajajaja\nTerrible",
         "Copias para el cliente\nYesss"
       ],
       file: [
@@ -3383,35 +3424,36 @@ var AMB = {
     angeles: {
       any: [
         "otra llamada en cola ps",
-        "ticket resuelto niña",
-        "calma, todo tiene solución",
-        "respira y sonríe ps",
-        "ese cliente quedó contento",
-        "cuántos hay en cola?",
+        "ticket resuelto",
+        "calma, todo tiene solucion",
+        "ese cliente quedo contento",
+        "cuantos hay en cola ?",
         "el sistema va lento hoy ps",
-        "un caso más cerrado",
-        "paciencia niña, mucha paciencia",
+        "un caso mas cerrado",
         "esa llamada fue larga",
-        "ya probó reiniciarlo?",
+        "ya probo reiniciarlo ?",
         "escalando este caso",
-        "hoy la cola no para ps",
-        "otro ticket por revisar",
+        "hoy la cola no para",
         "seguimos ps",
         "yo no",
         "por fin tengo cosas",
-        "por fin tengo cosas ps niña",
-        "quién trajo otra silla?",
-        "no boten nada niña, todo sirve",
-        "mi cubículo ya no está vacío",
-        "otra impresora más? sí ps"
+        "quien trajo otra silla ?",
+        "no boten nada, todo sirve",
+        "mi cubiculo ya no esta vacio",
+        "otra impresora mas ? sii ps",
+        "que maal",
+        "es mucho",
+        "quejeso",
+        "eso es peor",
+        "nah que ver"
       ],
       call: [
-        "buenas, le atiende ángeles",
+        "buenas, le atiende angeles",
         "entiendo perfectamente",
-        "permítame verificar",
-        "me confirma su número de cuenta?",
+        "permitame verificar",
+        "me confirma su numero de cuenta ?",
         "ya casi lo resolvemos",
-        "algo más en que le ayude?"
+        "algo mas en que le ayude ?"
       ],
       type: [
         "nota del caso, guardada",
@@ -3422,61 +3464,59 @@ var AMB = {
       ],
       sip: [
         "un sorbito entre llamadas",
-        "ah, eso necesitaba ps",
+        "ah, eso necesitaba",
         "agüita y seguimos",
-        "la garganta lo agradece niña"
+        "la garganta lo agradece"
       ],
       point: [
-        "ese ticket es prioridad niña",
-        "mira la cola en pantalla",
+        "ese ticket es prioridad",
+        "mira la cola",
         "ese caso ya lo vi",
-        "aquí está el error ps",
-        "ese cliente vuelve a llamar"
+        "aqui esta el error ps",
+        "ese cliente vuelve a llamar, que maal"
       ]
     },
-    /* john: his voice goes here later (self talk below is still the shared style) */
     john: {
       any: [
-        "Mide dos veces, corta una",
-        "Esta madera está perfecta",
-        "Falta lijar este borde",
-        "Ese gabinete va quedando",
-        "¿Dónde dejé el lápiz?",
-        "Aserrín por todos lados",
-        "Esta veta está bonita",
-        "Puertas de cocina, listo",
-        "Otro cajón armado",
+        "Mide dos veces y corta una, eso si",
+        "Co;o esta madera está perfecta",
+        "Falta lijar este borde, seguimos en la lucha",
+        "Ese gabinete va quedando bonito",
+        "Dónde dejé el lápiz ?",
+        "Aserrín hasta en las cejas jajajaja",
+        "Esta veta está muy bonita",
+        "Puertas de cocina listas, buenaaaaaa",
+        "Otro cajón armado!!!",
         "A escuadra, perfecto",
-        "Ese corte quedó limpio",
+        "Ese corte quedó limpio, esa es la actitud",
         "Hay que afilar el formón",
         "Bisagras en su sitio",
-        "Esta tabla vino torcida",
+        "Mielda, esta tabla vino torcida",
         "Paso a paso, sin apuro",
         "Huele a madera fresca",
-        "El cliente va a quedar feliz",
-        "Gabinete superior, listo",
-        "Revisa el nivel, John",
+        "El cliente va a quedar feliz con esto",
+        "Revisa el nivel John, revisa el nivel",
         "Un milímetro hace la diferencia",
-        "Trabajo fino, trabajo bueno",
-        "Esto va para la cocina",
+        "Deberíamos intentarlo con nogal la próxima",
+        "Ya decía yo que esta gaveta no cerraba",
         "Taller ordenado, mente ordenada"
       ],
       plane: [
         "Cepillando con cuidado",
         "Viruta bonita, buena señal",
         "Un poquito más fino",
-        "Quedó lisito"
+        "Quedó lisito jajajaja"
       ],
       sand: [
         "Lija gruesa primero",
         "Ahora la fina",
         "Suavecito como seda",
-        "Cuánto polvo, caramba"
+        "Cuánto polvo co;o"
       ],
       hammer: [
         "Un golpe firme",
-        "Cuidado con los dedos",
-        "Entró perfecto",
+        "Cuidado con los dedos panal",
+        "Entró perfecto!!!",
         "Clavo derecho, por favor"
       ],
       measure: [
@@ -3501,7 +3541,8 @@ var AMB = {
         "Ángulo de cuarenta y cinco",
         "Inglete listo",
         "Esa esquina va a cerrar bien",
-        "Lentes puestos, a cortar"
+        "Lentes puestos y a cortar",
+        "La ingletadora hoy está fina"
       ],
       drill: [
         "Broca del ocho",
@@ -3519,17 +3560,17 @@ var AMB = {
         "Una prensa más aquí",
         "Apretando parejito",
         "Que no se mueva nada",
-        "Bien sujeto, perfecto"
+        "Bien sujeto, eso si"
       ],
       sweep: [
-        "Cuánto aserrín, señor",
+        "Cuánto aserrín, se;or",
         "Barriendo el taller",
         "Piso limpio, taller feliz",
-        "El polvo para la bolsa"
+        "El polvo pa la bolsa"
       ],
       lift: [
         "A la una, a las dos...",
-        "Esta tabla pesa",
+        "Verga, esta tabla pesa",
         "Con las piernas, no la espalda",
         "Arriba, arriba"
       ],
@@ -3636,53 +3677,54 @@ var AMB = {
   texts: {
     doriana: [
       "Haciendo nada.?",
-      "¿Cómo va tu día?",
-      "Hoy tengo mil contratos 🫩",
-      "El gerente me tiene corriendo\nJajajaja",
-      "Por fin aprobaron un crédito\nYesss",
-      "La impresora se trabó otra vez\nMish",
-      "Hoy vendimos tres carros\nEpa",
+      "Como va tu día?",
+      "Hoy tengo mil contratos 🫩\nLiteral mil",
+      "El gerente me tiene corriendo\nAjajajaja",
+      "Por fin aprobaron un crédito\nWeeenaaaa",
+      "La impresora se trabó otra vez\nQue ladilla\nTerrible",
+      "Hoy vendimos tres carros\nEpa\nIrrgaaaa",
       "Ya archivé todo\nQue bueno",
       "Mañana tengo la agenda llena 🫩",
-      "Me faltan dos firmas nada más",
-      "Cerré todos los pendientes\nYesss",
+      "Me faltan dos firmas nada más\nOkokok",
       "Yo ando Christian Castro",
       "Yo llevo el día entero juntando fuerzas para ir a entrenar al menos",
-      "Ya casi termino\nUmju"
+      "Wido\nQue hacen hoy?\nPero sin plan pues\nAjajajaja",
+      "Mira tu\nEl banco aprobó a la primera\nI mean\nNunca pasa",
+      "Bueh\nYa casi termino\nUmju"
     ],
     angeles: [
-      "cómo va tu día?",
+      "como va tu dia ?",
       "es feriado ps niña",
+      "tienen planes hoy ?",
+      "quieren ir mañana ?",
       "hoy tengo mil llamadas",
       "la cola no baja ps",
-      "resolví un caso difícil niña",
-      "hoy cerré veinte tickets",
-      "qué tal tu mañana?",
-      "tuve una llamada eterna",
-      "ya casi termino el turno ps",
-      "hoy los clientes están amables",
-      "el sistema anda lento ps",
-      "cola vacía por fin niña",
-      "mucho trabajo por allá?",
-      "por fin tengo cosas en mi cubículo"
+      "resolvi un caso dificil",
+      "hoy cerre veinte tickets",
+      "tuve una llamada eterna, que maal",
+      "ya casi termino el turno",
+      "el sistema anda lento",
+      "cola vacia por fin",
+      "digan que hay que llevar",
+      "por fin tengo cosas en mi cubiculo",
+      "salgo en 3 min"
     ],
-    /* john: his voice goes here later */
     john: [
-      "¿Cómo va tu día?",
-      "Terminé el gabinete",
-      "Hoy estoy cortando puertas",
-      "Lleno de aserrín hasta el pelo",
-      "La cocina va quedando bonita",
-      "Armé seis cajones hoy",
-      "Estoy lijando todo el día",
-      "Hoy llegó madera nueva",
-      "Ya pegué las piezas",
-      "¿Qué tal tu mañana?",
-      "Instalé las bisagras",
-      "Ese gabinete quedó de lujo",
-      "Hoy el taller está movido",
-      "Ya casi termino por hoy",
-      "¿Mucho trabajo por allá?"
+      "Como va tu día panal ?",
+      "Terminé el gabinete, buenaaaaaa!!!",
+      "Hoy estoy cortando puertas en la ingletadora",
+      "Lleno de aserrín hasta el pelo jajajaja",
+      "La cocina va quedando bonita cabros",
+      "Armé seis cajones hoy, seguimos en la lucha",
+      "Hoy llegó madera nueva, co;o se ve buena",
+      "A qué hora salen hoy ?",
+      "Que hacen hoy muchachos ? Yo ya casi salgo del taller",
+      "Les digo el menú: sándwich y café jajajaja",
+      "Ese gabinete quedó de lujo panal",
+      "Adivinen quien terminó temprano",
+      "Mucho trabajo por allá ?",
+      "Wido como va esa web ?",
+      "Los espero en los food truck a las 6. Oka nos pillamos por allá!!!"
     ],
     luis: [
       "¿Cómo va tu día?",
@@ -3705,8 +3747,8 @@ var AMB = {
   replies: {
     doriana: [
       "Que bueno\nAquí con mil contratos",
-      "Jajajaja\nÁnimo con eso",
-      "Epa\nQue bueno",
+      "Ajajajaja\nÁnimo con eso",
+      "Epa\nQue felicidad",
       "Seee",
       "Umju",
       "Awwwww\nCosita",
@@ -3714,46 +3756,48 @@ var AMB = {
       "Pero trabajamos igual",
       "La mayoría trabaja 🫩",
       "Cambia toda la jugada eso",
-      "Aquí no\nAquí corriendo con el gerente",
-      "Jajajaja\nTe entiendo",
-      "Yesss",
-      "Ah no no mentira\nJajajaja",
-      "Aquí peleando con la impresora\nMish"
+      "Literal",
+      "Okokok\nBueh entonces",
+      "Ah no no mentira\nAjajajaja",
+      "Mira tu\nFor sure",
+      "Aquí peleando con la impresora\nMish\nTerrible",
+      "Weeenaaaa\nWido felicidades\nAjajajaja"
     ],
     angeles: [
       "yo no",
-      "qué bueno ps",
-      "ánimo niña",
-      "aquí con la cola llena",
-      "tranqui, que sale",
-      "felicidades niña",
-      "aquí entre llamada y llamada",
-      "jaja te entiendo",
-      "aquí cerrando tickets ps",
-      "qué chévere niña",
-      "paciencia, ya casi",
-      "aquí con el audífono puesto",
-      "bravo ps",
-      "aquí tranquila por ahora",
-      "así mismo es ps"
+      "que bueno ps",
+      "que maal",
+      "sii",
+      "see",
+      "jajaj ok ok",
+      "aqui con la cola llena",
+      "felicidades",
+      "pa donde ?",
+      "deja la inventadera",
+      "pide la wea y ya está",
+      "y que importa, dale",
+      "eso es peor",
+      "nah que ver",
+      "te quedo bonito",
+      "voy en 3 min"
     ],
-    /* john: his voice goes here later */
     john: [
-      "¡Qué bueno! Aquí lleno de aserrín",
-      "Jaja, ánimo con eso",
-      "¡Epa, qué fino!",
-      "Aquí cortando madera",
-      "Tranqui, que sale",
-      "¡Felicidades!",
-      "Aquí con la sierra",
-      "Jaja, te entiendo",
-      "Bien, aquí lijando",
-      "¡Quedó de lujo!",
-      "Fuerza, ya casi",
-      "Aquí con las prensas",
-      "¡Bravo!",
-      "Aquí tranquilo por ahora",
-      "Jaja, así mismo es"
+      "Buenaaaaaa panal, que bueno!!!",
+      "Jajajaja ánimo con eso",
+      "Co;o estoy muy contento por ti",
+      "Eso si",
+      "See",
+      "Esa es la actitud!!!",
+      "Seguimos en la lucha panal",
+      "Que raro",
+      "Mielda como así ?",
+      "No panal, aquí cortando madera",
+      "A qué hora ?",
+      "Oka nos pillamos por allá!!!",
+      "Aquí con las prensas, todo bien",
+      "Deberiamos intentarlo",
+      "Te luce Wido, ya pareces todo un se;or jajajaj",
+      "Ya decía yo jajajaja"
     ],
     luis: [
       "¡Qué bueno! Aquí publicando",
@@ -3926,9 +3970,9 @@ var PERSONAL = [
 ];
 function isPersonal(inp){ for (var i = 0; i < PERSONAL.length; i++) if (PERSONAL[i].test(inp.str)) return true; return false; }
 var DEFLECT = {
-  doriana:["Jajajaja\nEso no\nMejor pregúntame de papeleo o de citas","Aquí no\nDe eso no hablo en el trabajo","Mish, buen intento jajajaja\n¿Te cuento qué lleva un expediente?","Eso lo guardo bajo llave\nComo un expediente sellado"],
-  angeles:["eso no ps niña, lo personal lo dejo fuera de la línea","yo no hablo de eso en el trabajo ps. pregúntame de llamadas o tickets","jaja no niña. mejor te cuento de la música de espera","eso se queda en privado ps. te cuento cómo calmo a un cliente molesto?"],
-  john:["Eso lo dejo fuera del taller. Pregúntame de maderas, ensambles o acabados.","Eso es personal, así que paso. ¿Quieres saber la diferencia entre roble y arce?","Mejor quedémonos en el banco de trabajo. Medir, cortar, ensamblar: dale.","De eso no hablo en el trabajo. Pero pregúntame cómo funciona una cola de milano."],
+  doriana:["Ajajajaja\nEso no\nMejor pregúntame de papeleo o de citas","Aquí no\nDe eso no hablo en el trabajo\nLiteral","Mish, buen intento XD\nTe cuento qué lleva un expediente?","Eso lo guardo bajo llave\nComo un expediente sellado\nOkokok"],
+  angeles:["eso no ps, lo personal lo dejo fuera de la linea","yo no hablo de eso en el trabajo. preguntame de llamadas o tickets","jajaj no niña. mejor te cuento de la musica de espera","nah que ver. te cuento como calmo a un cliente molesto ?"],
+  john:["No panal, eso lo dejo fuera del taller. Pregúntame de maderas, ensambles o acabados.","Eso es personal muchachos, así que paso jajajaja. Quieres saber la diferencia entre roble y arce ?","Mejor quedémonos en el banco de trabajo panal. Medir, cortar, ensamblar, dale.","De eso no hablo en el trabajo. Pero pregúntame cómo funciona una cola de milano, eso si."],
   luis:["Lo personal lo mantengo offline. Pregúntame de páginas web, SEO o velocidad.","Eso se queda en privado. ¿Quieres saber cómo se arma una página de producto?","Mejor hablemos de la web: imágenes, accesibilidad, menús. Soy todo tuyo.","No es tema de trabajo, así que lo salto. Pero pregúntame para qué sirve el texto alternativo."]
 };
 var OPEN = {
@@ -3995,12 +4039,12 @@ function howReply(p){
   else if (why && (m === "stressed" || m === "tired" || m === "excited")) bits.push(cap(why) + ".");
   if (PROFILE[p.id].traits.chattiness > 0.7 && Math.random() < 0.4) bits.push(fresh(p, V(p, "andYou", ["¿Y tú?"])));
   if (V(p, "lower", false)) bits = bits.map(function(b){ return b.charAt(0).toLowerCase() + b.slice(1); });
-  return { text:bits.join(V(p, "join", " ")), reason:why || "es ese tipo de día" };
+  return { text:joinV(p, bits), reason:why || "es ese tipo de día" };
 }
 function grumpy(p){ return p.care.mood < 0.48 || (p.care.food < 0.45 && p.care.water < 0.5); }
 function tone(p, text){
   if (grumpy(p) && Math.random() < 0.5) return text.split(". ")[0].replace(/\.?$/, ".") + " " + fresh(p, V(p, "grumpy", ["Perdón, ando medio gruñón.","Uf, necesito un snack.","No me hagas caso, batería baja."]));
-  if ((p.mood.kind === "great" || p.mood.kind === "excited") && Math.random() < 0.12) return text + V(p, "join", " ") + fresh(p, PROFILE[p.id].jokes);
+  if ((p.mood.kind === "great" || p.mood.kind === "excited") && Math.random() < 0.12) return joinV(p, [text, fresh(p, PROFILE[p.id].jokes)]);
   return text;
 }
 var FOLLOW = {
@@ -4065,6 +4109,8 @@ function converse(p, raw){
   }
   var topicWins = ts.tp && ts.s >= 1.25 && (ts.s >= it.s * 0.9 || ts.s >= 100);
   if (it.s >= 3 && it.s >= ts.s) topicWins = false;
+  /* a short "chao" or "gracias" is a goodbye or a thank you, never a topic */
+  if ((it.id === "bye" || it.id === "thanks") && inp.raw.length <= 4) { topicWins = false; ts = { tp:null, s:0 }; }
   if (topicWins) {
     p.lastTopic = { tp:ts.tp, t:t };
     var pre = it.id === "greet" ? fresh(p, V(p, "hiPre", ["¡Hola! ","¡Epa! ","Ah, hola. "])) : V(p, "topicPre", null) ? fresh(p, V(p, "topicPre")) : "";
@@ -4077,7 +4123,7 @@ function converse(p, raw){
   switch (it.id) {
     case "greet":
       var gr = fresh(p, V(p, "greet", [p.mood.v > 0.3 ? "¡Epa! Qué bueno verte." : "Hola.", "¡Hola! " + (p.mood.v > 0 ? "¿Qué más?" : "¿Qué necesitas?"), "Hola. " + doingNow(p) + ", pero dime."]));
-      if (low && low.v < 0.5 && Math.random() < 0.6) gr += V(p, "join", " ") + gender(p, fresh(p, V(p, "askFor", ASK_FOR)[low.k]));
+      if (low && low.v < 0.5 && Math.random() < 0.6) gr = joinV(p, [gr, gender(p, fresh(p, V(p, "askFor", ASK_FOR)[low.k]))]);
       return { text:gr, intent:"greet" };
     case "bye": return { text:fresh(p, V(p, "bye", ["¡Chao!","¡Nos vemos! Vuelve cuando quieras.","¡Hasta luego!","¡Hablamos!"])), intent:"bye" };
     case "thanks": return { text:fresh(p, V(p, "thanks", ["¡Con gusto!","Para eso estamos.","¡De nada!","Tranquilo, cuando quieras."])), intent:"thanks" };
@@ -4089,11 +4135,12 @@ function converse(p, raw){
       if (p.mood.kind === "stressed") return { text:"La verdad, sí. Pero dime.", intent:"busy", reason:p.moodWhy || "es un día movido" };
       return { text:fresh(p, V(p, "free", ["No mucho, ¿qué pasó?","Tengo un minuto. Dale.","¿Para ti? Nunca."])), intent:"busy", reason:"por fin un momento tranquilo" };
     case "hungry":
-      if (c.food < LOWLINE) return { text:fresh(p, V(p, "hungryLow", ["¡Sí! Tengo un hambre... ¿tienes algo?","La verdad, mucha. ¿Traes algo?","Comería algo, seguro. Un sándwich sería lo máximo."])), intent:"hungry", reason:"hace rato que no como" };
-      if (c.food < 0.75) return { text:fresh(p, V(p, "hungryMid", ["Un poquito, pero estoy bien.","Picaría algo, pero sin apuro.","Ya casi. Pregúntame en una hora."])), intent:"hungry", reason:"hace un rato que comí" };
+      var cf = seenCare(p, "food");
+      if (cf < LOWLINE) return { text:fresh(p, V(p, "hungryLow", ["¡Sí! Tengo un hambre... ¿tienes algo?","La verdad, mucha. ¿Traes algo?","Comería algo, seguro. Un sándwich sería lo máximo."])), intent:"hungry", reason:"hace rato que no como" };
+      if (cf < 0.75) return { text:fresh(p, V(p, "hungryMid", ["Un poquito, pero estoy bien.","Picaría algo, pero sin apuro.","Ya casi. Pregúntame en una hora."])), intent:"hungry", reason:"hace un rato que comí" };
       return { text:fresh(p, V(p, "hungryNo", ["No, estoy bien, ¡gracias!","Acabo de comer, estoy full.","Ahorita no, gracias por preguntar."])), intent:"hungry", reason:"comí hace poco" };
     case "thirsty":
-      if (c.water < LOWLINE) return { text:gender(p, fresh(p, V(p, "thirstyLow", ["Sí, por favor, estoy seco.","Qué sed. Lo que sea me sirve.","La verdad, algo de tomar me caería perfecto."]))), intent:"thirsty", reason:"hace rato que no tomo nada" };
+      if (seenCare(p, "water") < LOWLINE) return { text:gender(p, fresh(p, V(p, "thirstyLow", ["Sí, por favor, estoy seco.","Qué sed. Lo que sea me sirve.","La verdad, algo de tomar me caería perfecto."]))), intent:"thirsty", reason:"hace rato que no tomo nada" };
       if (p.needs.coffee > 0.5 && p.state === "sit" && !busyAct(p)) { p.needs.coffee = 0; startAct(p, "sip", t + 1.5, 4, null, { item:DRINK_OF[p.id], label:"Tomándose un " + DRINK_ES[DRINK_OF[p.id]] }); bumpCare(c, "water", 0.08); netCare(p); return { text:fresh(p, ["Me leíste la mente. Ya me sirvo un " + DRINK_ES[DRINK_OF[p.id]] + ".","¡Sí! Me tomo un " + DRINK_ES[DRINK_OF[p.id]] + " ya mismo."]), intent:"thirsty", reason:"hace rato que no me tomo uno" }; }
       return { text:fresh(p, V(p, "thirstyNo", ["Por ahora bien, ¡gracias!","Acabo de tomar algo, pero gracias.","Quizás más tarde, gracias."])), intent:"thirsty", reason:"tomé algo hace poco" };
     case "tired":
