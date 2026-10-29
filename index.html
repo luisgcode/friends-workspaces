@@ -1624,10 +1624,10 @@ var MOODS = {
 function moodLabel(p, k){ var m = MOODS[k || p.mood.kind]; return p.pron === "she" && m.labelF ? m.labelF : m.label; }
 var PROFILE = {
   doriana:{ traits:{ humour:0.7, chattiness:0.7, stressTol:0.7 }, moodW:{ excited:1, great:2.5, good:3, okay:1.5, tired:1, stressed:1 },
-    jokes:["Mi sonido favorito es una engrapadora atravesando cuarenta hojas de una vez.","Yo no pierdo archivos. Los archivos se pierden solos y yo los encuentro.","En algún lugar de esta oficina hay un bolígrafo que sí escribe. Lo sigo buscando.","Inicial aquí, aquí y aquí. Esa es toda mi personalidad."],
+    jokes:["Mi sonido favorito es la engrapadora atravesando cuarenta hojas\nJajajaja","Yo no pierdo archivos\nLos archivos se pierden solos y yo los encuentro","En algún lado hay un bolígrafo que sí escribe\nLo sigo buscando 🫩","Inicial aquí, aquí y aquí\nEsa es toda mi personalidad jajajaja"],
     likes:"un expediente con todas las firmas en su lugar", dislikes:"una inicial que falta en la página nueve" },
   angeles:{ traits:{ humour:0.75, chattiness:0.8, stressTol:0.85 }, moodW:{ excited:1.5, great:3, good:3, okay:1.2, tired:1, stressed:0.6 },
-    jokes:["Me sé la música de espera tan bien que podría tocarla en vivo.","Mi superpoder es decir 'lo entiendo perfectamente' y que sea verdad.","Gracias por su paciencia. No, en serio, gracias.","El botón de silencio es mi mejor amigo."],
+    jokes:["me sé la música de espera tan bien que la toco en vivo ps","mi superpoder es decir 'lo entiendo perfectamente' y que sea verdad","gracias por su paciencia. no, en serio niña, gracias","el botón de silencio es mi mejor amigo ps"],
     likes:"que alguien cuelgue más contento de lo que llamó", dislikes:"que se caiga la llamada justo antes de resolver" },
   john:{ traits:{ humour:0.6, chattiness:0.55, stressTol:0.8 }, moodW:{ excited:1, great:2.5, good:3, okay:2, tired:1, stressed:0.6 },
     jokes:["Medí dos veces, corté una, y igual quedó corto. Clásico.","El aserrín es la escarcha de los carpinteros.","Ese chiste de carpintería no me salió, me faltó lijarlo.","¿Quieres ver el gabinete? Está quedando de madera... digo, de maravilla."],
@@ -1728,11 +1728,95 @@ var COMPLAIN = {
   water:["Necesito agua...","Tengo la garganta seca.","¿Alguien me trae algo de tomar?","Me muero de sed aquí.","Un vasito de agua, porfa..."],
   faint:["Me estoy desmayando aquí...","No puedo más...","Ya casi no me quedan fuerzas."]
 };
+/* ---------- how each one talks: overrides the shared pools above and in the chat engine ----------
+   Doriana writes in bursts, one idea per line: a "\n" in her lines shows as back to back bubbles and separate chat messages.
+   Angeles writes lowercase and casual, with "ps" and "niña". */
+var VOICE = {
+  doriana:{
+    join:"\n",
+    food:["Tengo hambre 🫩","Mish nadie me da comida","Tengo hambre\nMucha hambre","Me suena la barriga\nJajajaja","Luis aliméntame\nJajajaja","Un sándwich\nAlguien 🫩"],
+    water:["Tengo sed 🫩","Mish nadie me da agua","Un vasito de agua\nPorfa","Se me secó la garganta\nUmju","Agua\nAlguien\nLo que sea"],
+    faint:["Ya no puedo 🫩","Me desmayo aquí\nAh no no mentira\nBueno sí 🫩","Se muere la Doriana\nComo el Draco jajajaja"],
+    perk:["Yesss\nGracias","Awwwww gracias\nVolví a la vida","Ahora sí\nQue bueno"],
+    open:{ excited:["Yesss\nDemasiado bien","Epa\nHoy no me puedo quedar quieto"], great:["Bien\nQue bueno","Seee\nSúper bien"], good:["Bien, umju","Todo bien por aquí"],
+      okay:["Ahí vamos","Umju\nNormal"], tired:["Cansada 🫩","Yo llevo el día entero juntando fuerzas para ir a entrenar al menos"], stressed:["Movido\nMuy movido 🫩","Mil cosas a la vez\nPero trabajamos igual"] },
+    need:{ food:["Tengo hambre 🫩","Mish, me está dando hambre"], water:["Tengo sed\nUmju","Necesito agua 🫩"], energy:["Ando sin energía 🫩","Una siestica\nSeee"], mood:["Día medio gris\nNada grave","Me vendría bien una buena noticia"] },
+    askFor:{ food:["Tengo hambre 🫩\n¿Tienes algo?","Mish nadie me da comida","¿Hay algo de picar?\nAlguien"], water:["¿Me traes algo de tomar?\nPorfa","Tengo sed 🫩"],
+      energy:["Necesito un descanso 🫩","Se me cierran los ojos\nJajajaja"], mood:["Dime algo bonito\nMe hace falta","¿Me animas?\nPorfa"] },
+    mood:{ tired:["Cansada 🫩","Yo llevo el día entero juntando fuerzas para ir a entrenar al menos","¿Ya es hora de irse?\nJajajaja"], stressed:["Todo para ayer 🫩","Una cosa a la vez\nUmju","Pero trabajamos igual"],
+      great:["Yesss","Hoy todo me sale bien\nEpa","Que bueno\nQue bueno"], hungry:["Tengo hambre 🫩","Mish nadie me da comida","Una arepa ahorita\nAwwwww"], thirsty:["Tengo sed 🫩","Agua\nAlguien"] },
+    greet:function(p){ return [p.mood.v > 0.3 ? "Epa\nQue bueno verte" : "Hola\nUmju", "Hola\n¿Qué más?", "Hola\n" + doingNow(p) + "\nPero dime"]; },
+    hiPre:["Hola\n","Epa\n"], topicPre:["Umju\n","Seee\n","Epa\n",""],
+    bye:["Chao\nJajajaja","Nos vemos","Umju\nHablamos"], thanks:["Umju","De nada\nCosita","Seee\nCuando quieras"],
+    free:["No mucho\n¿Qué pasó?","Umju\nTengo un minuto","¿Para ti?\nSiempre"],
+    hungryLow:["Seee\nTengo hambre 🫩","Mish, mucha\n¿Traes algo?"], hungryMid:["Un poquito\nPero bien","Umju\nPicaría algo"], hungryNo:["No, estoy bien\nGracias","Ah no no\nAcabo de comer"],
+    thirstyLow:["Seee, porfa\nEstoy seca","Tengo sed 🫩"], thirstyNo:["Por ahora bien\nGracias","Umju\nAcabo de tomar algo"],
+    tiredLow:["Seee 🫩\nUn descansito","Yo llevo el día entero juntando fuerzas para ir a entrenar al menos"], tiredNo:["Para nada\nTengo pila","Yesss\nMucha energía hoy"],
+    praise:["Awwwww\nGracias","Awwwww cosita\nMe alegraste el día","Jajajaja\nPara, que me lo creo"],
+    wake:["¿Mm?\nAh, estaba descansando los ojos","Zzz...\nAh no no, ya volví jajajaja"],
+    grumpy:["Mish\nNecesito un snack 🫩","No me hagas caso\nTengo hambre"],
+    yum:["Yesss","Awwwww","Que rico"], foodThanks:["Yesss\nGracias por {art}","Awwwww\nEres lo máximo","Que bueno\nYa me estaba dando hambre"],
+    stillHungry:["Gracias\nPero sigo con hambre 🫩","Umju, ayudó\nMe comería otro jajajaja"], full:["Ah no no\nEstoy llena","Gracias\nPero no me cabe nada jajajaja"],
+    sipSay:["Yesss","Awwwww gracias"], drinkThanks:["Yesss\nGracias por {art}","Awwwww\nQue detalle"],
+    cheerSay:["Awwwww","Cosita"], cheer:["Awwwww\nMe alegraste el día","Cosita\nYa estoy sonriendo"],
+    nap:["¿Un descanso?\nSeee","Una siestica\nYesss, ya vuelvo"], workSay:["Umju, a darle"], work:["Umju\nA darle","Cabeza abajo\nPero trabajamos igual jajajaja"]
+  },
+  angeles:{
+    lower:true, andYou:["y tú?"], focused:["hoy estoy concentrada ps","cabeza abajo niña, sacando cosas"],
+    food:["tengo hambre ps niña","nadie me da comida ps","me suena la barriga niña","luis aliméntame ps","un sándwich ps, alguien?"],
+    water:["tengo sed ps niña","agua ps, alguien?","tengo la garganta seca niña","un vasito de agua ps"],
+    faint:["ya no puedo niña","me desmayo aquí ps","sin fuerzas ps"],
+    perk:["gracias niña, ya estoy mejor","ahora sí ps, gracias","gracias, volví a la vida ps"],
+    open:{ excited:["demasiado bien ps niña","súper bien, no me puedo quedar quieto"], great:["muy bien ps","bien bien niña"], good:["bien ps","todo bien por aquí"],
+      okay:["ahí vamos ps","normal niña"], tired:["cansada ps niña","con la batería baja ps"], stressed:["movido ps, muy movido","mil llamadas a la vez niña"] },
+    need:{ food:["me está dando hambre ps"], water:["tengo sed ps niña"], energy:["ando sin energía ps"], mood:["día medio gris ps, nada grave"] },
+    askFor:{ food:["tengo hambre ps niña, tienes algo?","nadie me da comida ps"], water:["me traes algo de tomar? porfa niña","tengo sed ps"],
+      energy:["necesito un descanso ps","se me cierran los ojos niña"], mood:["dime algo bonito ps, me hace falta","me animas niña?"] },
+    mood:{ tired:["cansada ps niña","ya es hora de irse? yo no aguanto"], stressed:["calma ps, una cosa a la vez","todo para ayer niña"],
+      great:["hoy todo me sale bien ps","qué buen día niña"], hungry:["tengo hambre ps niña","una arepa ahorita ps"], thirsty:["tengo sed ps","agüita ps, alguien?"] },
+    greet:function(p){ return ["hola niña", "hola ps, qué más?", "hola, " + doingNow(p).toLowerCase() + ", pero dime"]; },
+    hiPre:["hola niña, ","hola ps, "], topicPre:["mira niña, ","ps mira, ",""],
+    bye:["chao niña","nos vemos ps","hablamos"], thanks:["de nada ps","con gusto niña","cuando quieras"],
+    free:["no mucho ps, qué pasó?","tengo un minuto niña, dale","yo no, dime"],
+    hungryLow:["sí ps niña, tengo hambre. tienes algo?","mucha ps"], hungryMid:["un poquito ps, pero bien","picaría algo niña"], hungryNo:["yo no, gracias","acabo de comer ps, estoy llena"],
+    thirstyLow:["sí porfa niña, estoy seca","qué sed ps"], thirstyNo:["por ahora bien ps","acabo de tomar algo niña"],
+    tiredLow:["sí ps, un descansito me caería bien","un poco niña"], tiredNo:["yo no, tengo pila para rato","nada ps, estoy en racha"],
+    praise:["ay gracias niña, me alegraste el día","gracias ps, de verdad","para niña, que me lo creo"],
+    wake:["mm? ah, estaba descansando los ojos ps","ya volví niña, dime"],
+    grumpy:["perdón, ando gruñona ps","necesito un snack niña"],
+    yum:["qué rico ps","gracias niña"], foodThanks:["gracias por {art} niña","justo lo que necesitaba ps"],
+    stillHungry:["gracias, pero sigo con hambre ps","me comería otro niña"], full:["estoy llena ps, gracias","no me cabe nada niña"],
+    sipSay:["gracias niña","ahh, perfecto ps"], drinkThanks:["gracias por {art} ps","qué detalle niña"],
+    coffee:"café! gracias niña. normalmente tomo té por la voz, pero hoy no le digo que no",
+    cheerSay:["ay gracias niña"], cheer:["me alegraste el día ps","ay niña, ya estoy sonriendo"],
+    nap:["un descanso? no te digo que no ps","una siestica, ya vuelvo niña"], workSay:["a darle ps"], work:["listo ps, a darle","cabeza abajo niña"]
+  }
+  /* john: his voice goes here later, same keys */
+};
+function V(p, key, base){ var v = VOICE[p.id], x = v && v[key]; if (typeof x === "function") x = x(p); return x || base; }
+/* 🫩 is a new emoji; where the device can't draw it, the line just goes without it */
+var EMOJI_OK = null;
+function emojiOk(){
+  try {
+    var c = document.createElement("canvas"); c.width = c.height = 32;
+    var x = c.getContext("2d"); x.textBaseline = "top"; x.font = "26px sans-serif"; x.fillStyle = "#000"; x.fillText("\u{1FAE9}", 0, 0);
+    var d = x.getImageData(0, 0, 32, 32).data;
+    for (var i = 0; i < d.length; i += 4) if (d[i + 3] && (d[i] !== d[i + 1] || d[i + 1] !== d[i + 2])) return true;
+  } catch (e) {}
+  return false;
+}
+function voiced(s){
+  s = String(s);
+  if (s.indexOf("\u{1FAE9}") < 0) return s;
+  if (EMOJI_OK === null) EMOJI_OK = emojiOk();
+  return EMOJI_OK ? s : s.replace(/ ?\u{1FAE9}/gu, "");
+}
+function burst(s){ return voiced(s).split("\n").filter(function(x){ return x.trim(); }); }
 function complainLine(p){
   var k = seenCare(p, "food") <= seenCare(p, "water") ? "food" : "water";
-  var pool = COMPLAIN[k].slice();
-  if (k === "food") pool.push(p.id === "luis" ? "Doriana, ¿me pasas algo de comer?" : "Luis, aliméntame porfa");
-  if ((p.weak || 0) > 0.6) pool = pool.concat(COMPLAIN.faint);
+  var pool = V(p, k, COMPLAIN[k]).slice();
+  if (k === "food" && !VOICE[p.id]) pool.push(p.id === "luis" ? "Doriana, ¿me pasas algo de comer?" : "Luis, aliméntame porfa");
+  if ((p.weak || 0) > 0.6) pool = pool.concat(V(p, "faint", COMPLAIN.faint));
   return fresh(p, pool);
 }
 /* four times a second: the weakness eases toward its target (falls slowly, recovers fast), and coming back up gets a small thank-you */
@@ -1748,7 +1832,7 @@ function updateHunger(p, t, nd){
 function hungerTick(p, t){
   if (p.perkAt && t > p.perkAt) {
     p.perkAt = 0; p.smileUntil = t + 4;
-    say(p, choose(["¡Gracias! Ya me siento mejor.","¡Gracias! Volví a la vida.","¡Ahora sí! Gracias."]), 3);
+    say(p, choose(V(p, "perk", ["¡Gracias! Ya me siento mejor.","¡Gracias! Volví a la vida.","¡Ahora sí! Gracias."])), 3);
   }
   if (!p.hungry || !p.complainAt || t < p.complainAt) return;
   var asleep = p.act && (p.act.n === "nap" || p.act.n === "napStand");
@@ -1796,7 +1880,10 @@ PEOPLE.forEach(function(p){
 function startAct(p, name, t, dur, target, extra){
   p.act = Object.assign({ n:name, t0:t, dur:dur || rand(2.2, 4.2), target:target || null }, extra || {});
 }
-function say(p, text, secs){ p.say = { text:text, until:clock.elapsedTime + (secs || 3) }; }
+function say(p, text, secs){
+  var parts = burst(text), each = parts.length > 1 ? Math.max(1.7, (secs || 3) * 0.65) : (secs || 3);
+  p.say = { text:parts[0] || "", rest:parts.slice(1), each:each, until:clock.elapsedTime + each };
+}
 var chats = [];
 function updateChats(t){
   for (var i = chats.length - 1; i >= 0; i--) {
@@ -1825,6 +1912,7 @@ function showBubble(p, text){
 var pings = [];
 function sendText(a, b, t, line, isReply){
   line = line || choose(AMB.texts[a.id]);
+  if (a.id === "angeles" && b.pron === "he") line = line.replace(/,? niña\b/g, "");
   startAct(a, "text", t, 3.2, null, { label:(isReply ? "Respondiéndole a " : "Escribiéndole a ") + b.name, item:"phone" });
   say(a, "\u{1F4F1} " + line, 3.4);
   var el = document.createElement("div"); el.className = "ping"; el.setAttribute("aria-hidden", "true"); el.textContent = "✉️"; el.hidden = true;
@@ -2175,11 +2263,11 @@ KB["doriana"] = {
     { id:"opinion-craft", q:"¿Qué crees que hace un buen papeleo?", k:["good paperwork","quality paperwork","paperwork quality","perfect paperwork","paperwork standards","craft","buen papeleo","papeleo bien hecho","calidad del papeleo","papeleo perfecto","estandares del papeleo","papeles bien hechos"], a:["Completo, consistente y legible. Si un extraño lo entiende, es buen papeleo.","Nada en blanco donde debería haber respuesta, nada de sorpresas y todo en su lugar.","El buen papeleo cuenta la historia completa sin que yo tenga que explicarla."], more:["Una letra clara donde se escribe a mano ayuda más de lo que la gente cree.","Y una etiqueta clara por fuera. El mejor archivo del mundo no sirve si nadie lo encuentra."], ex:["Por ejemplo, una carpeta donde cada página coincide con la lista y cada número cuadra es buen papeleo."], why:["Porque el papeleo lo lee después gente que no estuvo ahí."] }
   ],
   fallback:[
-    "Mmm, eso no está en mis archivos. Pregúntame por las carpetas de venta, los requisitos del banco, el corre corre de fin de mes o cómo mantengo ordenado mi escritorio.",
-    "No estoy segura de eso, ¡pero de papeleo sí sé! Prueba preguntando por el carro en parte de pago, los atascos de la impresora, los códigos de colores o mi día normal.",
-    "Eso se sale de mi archivador, lo siento. Te puedo contar de los paquetes de fondeo, la agenda del gerente, la trituradora o consejos para asistentes nuevas.",
-    "Buena pregunta, pero no tengo carpeta para eso. ¿Qué tal el título y la matrícula, verificar números dos veces, las entregas o mi parte favorita del trabajo?",
-    "Déjame ver... no, nada sobre eso. Con gusto te hablo del escaneo, los documentos confidenciales, cómo decir que no con educación o cómo mantener la calma en los días movidos."
+    "Mmm, eso no está en mis archivos\nPregúntame por las carpetas de venta, los requisitos del banco o el corre corre de fin de mes",
+    "Ah no no, eso no lo sé jajajaja\nDe papeleo sí: el carro en parte de pago, los atascos de la impresora o los códigos de colores",
+    "Eso se sale de mi archivador\nPero te cuento de los paquetes de fondeo, la agenda del gerente o la trituradora",
+    "Umju, no tengo carpeta para eso\n¿Qué tal el título y la matrícula, las entregas o mi parte favorita del trabajo?",
+    "Mish, nada sobre eso\nTe hablo del escaneo, los documentos confidenciales o cómo mantener la calma en los días movidos"
   ],
   suggest:[
     "¿Qué es una carpeta de venta?",
@@ -2309,11 +2397,11 @@ KB["angeles"] = {
     { id:"under-promise", q:"¿Alguna vez prometes cosas que no controlas?", k:["broken promise","overpromise","over promise","promise","guarantee","commitments","promising too much","promesa rota","prometer de mas","prometer","garantizar","compromisos","promesas que no controlo"], a:["Nunca. Solo prometo lo que yo puedo hacer, como devolver la llamada o dar una actualización.","Prometo acciones, no resultados que no controlo. 'Lo persigo hoy' en vez de 'llega mañana'.","Una promesa cumplida genera más confianza que una promesa grande rota."], more:["Si no estoy segura, lo digo y prometo averiguarlo. La honestidad funciona mejor que el optimismo.","Cada promesa va a mis notas para que no se me olvide."], ex:["Por ejemplo: 'No te puedo garantizar la fecha, pero voy a consultar con el almacén y te llamo antes de las 3 p. m.'"], why:["Porque las promesas rotas son la forma más rápida de perder la confianza."] }
   ],
   fallback:[
-    "Mmm, esa no me la sé. ¡Pregúntame sobre clientes molestos, la música de espera, el tablero de tickets o lo que más me gusta de mi trabajo!",
-    "Esa es nueva para mí. Con gusto te hablo de cómo poner a alguien en espera con educación, cómo calmar una situación, los guiones o consejos para principiantes.",
-    "Buena pregunta, pero no es lo mío. Prueba preguntarme por la resolución en la primera llamada, mis consejos de audífonos, los lunes o las frases de empatía.",
-    "Esa te la voy a tener que poner en espera, y créeme, no quieres escuchar la música. ¿Qué tal si me preguntas cómo cierro una llamada, la prioridad de los tickets o cómo cuido la voz?",
-    "No sé si te puedo ayudar con eso, ¡pero de teléfonos sí sé! Pregúntame por la llamada más chistosa, las revisiones de calidad, el lenguaje positivo o cómo es un día normal."
+    "mmm, esa no me la sé ps. pregúntame de clientes molestos, la música de espera o el tablero de tickets",
+    "esa es nueva para mí niña. te hablo de cómo poner a alguien en espera, cómo calmar una situación o los guiones",
+    "yo no sé de eso ps. prueba con la resolución en la primera llamada, mis audífonos o los lunes",
+    "esa te la pongo en espera niña, y no quieres oír la música. pregúntame cómo cierro una llamada o cómo cuido la voz",
+    "de eso no sé ps, pero de teléfonos sí. pregúntame por la llamada más chistosa o cómo es un día normal"
   ],
   suggest:[
     "¿Cómo manejas a un cliente molesto?",
@@ -3219,140 +3307,134 @@ var AMB = {
   self: {
     doriana: {
       any: [
-        "Otra solicitud de crédito más...",
-        "¿Dónde dejé el contrato del cliente?",
-        "Falta la firma aquí",
-        "El gerente quiere esto para hoy",
-        "Este expediente va completo",
+        "Otra solicitud de crédito\nJajajaja",
+        "¿Dónde dejé el contrato?\nAh no no mentira, aquí está",
+        "Falta la firma aquí\nMish",
+        "El gerente quiere esto para hoy 🫩",
+        "Este expediente va completo\nQue bueno",
         "¿Quién movió mi engrapadora?",
-        "Cita de las tres, confirmada",
-        "A ver, ¿qué falta en este negocio?",
-        "Otro carro vendido, ¡epa!",
-        "El jefe dijo que urgente",
-        "Copia de la licencia, listo",
-        "Comprobante de ingresos... ¿dónde está?",
-        "Esta carpeta no cierra sola",
-        "Uno menos, faltan diez",
-        "Revisa bien los números, Doriana",
-        "El banco aprobó, ¡qué fino!",
-        "Hoy la oficina está movida",
-        "Todo en orden por aquí",
-        "Otra vez la impresora...",
-        "Tengo que llamar al cliente",
-        "Este trato quedó bonito",
-        "Fecha, nombre, firma... listo",
-        "Agenda del gerente, al día"
+        "Cita de las tres\nYesss, confirmada",
+        "Otro carro vendido\nEpa",
+        "El jefe dijo que urgente\nUmju",
+        "Comprobante de ingresos\n¿Dónde está?",
+        "Uno menos\nFaltan diez 🫩",
+        "El banco aprobó\nYesss",
+        "Todo en orden por aquí\nUmju",
+        "Otra vez la impresora\nMish",
+        "Este trato quedó bonito\nAwwwww",
+        "Fecha, nombre, firma\nSeee, listo",
+        "Cambia toda la jugada eso",
+        "Pero trabajamos igual",
+        "La mayoría trabaja 🫩",
+        "Yo ando Christian Castro",
+        "Es lo más natural",
+        "Se muere el Draco\nJajajaja"
       ],
       read: [
-        "A ver qué dice esta cláusula",
-        "Leyendo la solicitud del cliente",
-        "Este monto no cuadra",
-        "Todo coincide, perfecto",
-        "Letra pequeña, mucha letra pequeña"
+        "A ver esta cláusula\nUmju",
+        "Este monto no cuadra\nMish",
+        "Todo coincide\nQue bueno",
+        "Letra pequeña\nMucha letra pequeña 🫩",
+        "Seee, todo firmado"
       ],
       sort: [
         "Esto va para el gerente",
-        "Contratos a la izquierda",
-        "Firmados aquí, pendientes allá",
-        "Ordenando el desorden",
-        "¿Y este papel de quién es?"
+        "Firmados aquí\nPendientes allá",
+        "Ordenando el desorden\nJajajaja",
+        "¿Y este papel de quién es?",
+        "Umju, contratos a la izquierda"
       ],
       type: [
         "Actualizando el expediente",
-        "Pasando los datos del cliente",
-        "Correo al banco, enviado",
-        "Número de chasis... listo",
-        "Escribiendo el resumen del trato"
+        "Correo al banco\nYesss, enviado",
+        "Número de chasis\nListo",
+        "Pasando los datos del cliente 🫩",
+        "Resumen del trato\nUmju"
       ],
       deskPhone: [
         "Concesionario, buenos días",
         "Sí, el gerente lo llama luego",
-        "Le confirmo la cita",
+        "Le confirmo la cita\nUmju",
         "Un momentico, por favor",
-        "¿Me repite su nombre?"
+        "Seee, a las tres"
       ],
       print: [
-        "Imprimiendo el contrato...",
-        "¿Otra vez sin papel?",
-        "Dale, impresora, tú puedes",
-        "Copias para el cliente",
-        "Atasco de papel, qué raro"
+        "Imprimiendo el contrato",
+        "¿Otra vez sin papel?\nMish",
+        "Dale, impresora\nTú puedes",
+        "Atasco de papel\nJajajaja",
+        "Copias para el cliente\nYesss"
       ],
       file: [
         "Al archivo, expediente",
-        "Gaveta de créditos aprobados",
-        "Archivado por apellido",
+        "Archivado por apellido\nQue bueno",
         "Este va en la carpeta azul",
-        "Listo, guardado y etiquetado"
+        "Listo, guardado\nUmju",
+        "Epa\nLa gaveta está llena"
       ],
       talk: [
         "Jefe, ya está listo",
-        "Solo falta la firma",
-        "El banco pide un documento más",
+        "Solo falta la firma\nUmju",
+        "El banco pide un papel más 🫩",
         "Le dejo la carpeta aquí",
-        "La cita se movió a las cuatro"
+        "Seee, se movió a las cuatro"
       ]
     },
     angeles: {
       any: [
-        "Gracias por llamar, ¿en qué le puedo ayudar?",
-        "Le pongo en espera un momento",
-        "Ticket resuelto",
-        "Otra llamada en cola...",
-        "Calma, que todo tiene solución",
-        "Respira y sonríe",
-        "Ese cliente quedó contento",
-        "¿Cuántos hay en cola ahorita?",
-        "Abriendo un ticket nuevo",
-        "El sistema va lento hoy",
-        "Anotando el número de caso",
-        "Un caso más cerrado",
-        "Paciencia, mucha paciencia",
-        "Le explico paso a paso",
-        "Esa llamada fue larga",
-        "Voz amable, siempre",
-        "¿Ya probó reiniciarlo?",
-        "Escalando este caso",
-        "Hoy la cola no para",
-        "Buen ritmo esta mañana",
-        "Su número de referencia es...",
-        "Que tenga un excelente día",
-        "Otro ticket por revisar",
-        "Seguimos, seguimos",
-        "Por fin tengo cosas",
-        "¿Quién trajo otra silla?",
-        "No boten nada, que todo sirve",
-        "Mi cubículo ya no está vacío"
+        "otra llamada en cola ps",
+        "ticket resuelto niña",
+        "calma, todo tiene solución",
+        "respira y sonríe ps",
+        "ese cliente quedó contento",
+        "cuántos hay en cola?",
+        "el sistema va lento hoy ps",
+        "un caso más cerrado",
+        "paciencia niña, mucha paciencia",
+        "esa llamada fue larga",
+        "ya probó reiniciarlo?",
+        "escalando este caso",
+        "hoy la cola no para ps",
+        "otro ticket por revisar",
+        "seguimos ps",
+        "yo no",
+        "por fin tengo cosas",
+        "por fin tengo cosas ps niña",
+        "quién trajo otra silla?",
+        "no boten nada niña, todo sirve",
+        "mi cubículo ya no está vacío",
+        "otra impresora más? sí ps"
       ],
       call: [
-        "Buenas, le atiende Ángeles",
-        "Entiendo perfectamente",
-        "Permítame verificar",
-        "¿Me confirma su número de cuenta?",
-        "Ya casi lo resolvemos",
-        "¿Hay algo más en que le ayude?"
+        "buenas, le atiende ángeles",
+        "entiendo perfectamente",
+        "permítame verificar",
+        "me confirma su número de cuenta?",
+        "ya casi lo resolvemos",
+        "algo más en que le ayude?"
       ],
       type: [
-        "Nota del caso, guardada",
-        "Actualizando el ticket",
-        "Cerrando el caso...",
-        "Escribiendo el resumen",
-        "Datos del cliente, listo"
+        "nota del caso, guardada",
+        "actualizando el ticket",
+        "cerrando el caso ps",
+        "escribiendo el resumen",
+        "datos del cliente, listo"
       ],
       sip: [
-        "Un sorbito entre llamadas",
-        "Ah, eso es lo que necesitaba",
-        "Cafecito y seguimos",
-        "La garganta lo agradece"
+        "un sorbito entre llamadas",
+        "ah, eso necesitaba ps",
+        "agüita y seguimos",
+        "la garganta lo agradece niña"
       ],
       point: [
-        "Ese ticket es de prioridad",
-        "Mira la cola en pantalla",
-        "Ese caso ya lo vi",
-        "Aquí está el error",
-        "Ese cliente vuelve a llamar"
+        "ese ticket es prioridad niña",
+        "mira la cola en pantalla",
+        "ese caso ya lo vi",
+        "aquí está el error ps",
+        "ese cliente vuelve a llamar"
       ]
     },
+    /* john: his voice goes here later (self talk below is still the shared style) */
     john: {
       any: [
         "Mide dos veces, corta una",
@@ -3553,39 +3635,38 @@ var AMB = {
   },
   texts: {
     doriana: [
+      "Haciendo nada.?",
       "¿Cómo va tu día?",
-      "Hoy tengo mil contratos",
-      "El gerente me tiene corriendo",
-      "Por fin aprobaron un crédito",
-      "La impresora se volvió a trabar",
-      "Hoy vendimos tres carros",
-      "Tengo una pila de expedientes",
-      "Ya terminé de archivar todo",
-      "Mañana tengo la agenda llena",
-      "¿Cómo te fue esta mañana?",
-      "Hoy el concesionario está full",
+      "Hoy tengo mil contratos 🫩",
+      "El gerente me tiene corriendo\nJajajaja",
+      "Por fin aprobaron un crédito\nYesss",
+      "La impresora se trabó otra vez\nMish",
+      "Hoy vendimos tres carros\nEpa",
+      "Ya archivé todo\nQue bueno",
+      "Mañana tengo la agenda llena 🫩",
       "Me faltan dos firmas nada más",
-      "¡Cerré todos los pendientes!",
-      "Día tranquilo por aquí",
-      "Ya casi termino por hoy"
+      "Cerré todos los pendientes\nYesss",
+      "Yo ando Christian Castro",
+      "Yo llevo el día entero juntando fuerzas para ir a entrenar al menos",
+      "Ya casi termino\nUmju"
     ],
     angeles: [
-      "¿Cómo va tu día?",
-      "Hoy tengo mil llamadas",
-      "La cola no baja",
-      "Resolví un caso difícil",
-      "Hoy cerré veinte tickets",
-      "¿Qué tal tu mañana?",
-      "Día tranquilo en las llamadas",
-      "Tuve una llamada eterna",
-      "Ya casi termino el turno",
-      "Hoy los clientes están amables",
-      "El sistema anda lento hoy",
-      "Mi récord de tickets, ¡epa!",
-      "Un descansito entre llamadas",
-      "Cola vacía por fin",
-      "¿Mucho trabajo por allá?"
+      "cómo va tu día?",
+      "es feriado ps niña",
+      "hoy tengo mil llamadas",
+      "la cola no baja ps",
+      "resolví un caso difícil niña",
+      "hoy cerré veinte tickets",
+      "qué tal tu mañana?",
+      "tuve una llamada eterna",
+      "ya casi termino el turno ps",
+      "hoy los clientes están amables",
+      "el sistema anda lento ps",
+      "cola vacía por fin niña",
+      "mucho trabajo por allá?",
+      "por fin tengo cosas en mi cubículo"
     ],
+    /* john: his voice goes here later */
     john: [
       "¿Cómo va tu día?",
       "Terminé el gabinete",
@@ -3623,39 +3704,40 @@ var AMB = {
   },
   replies: {
     doriana: [
-      "¡Qué bueno! Aquí con mil contratos",
-      "Jaja, ánimo con eso",
-      "¡Epa, qué fino!",
-      "Aquí corriendo con el gerente",
-      "Tranqui, tú puedes",
-      "¡Felicidades, crack!",
-      "Aquí también movido",
-      "Jaja, te entiendo",
-      "Bien, aquí archivando",
-      "¡Qué bien te quedó!",
-      "Aquí peleando con la impresora",
-      "Fuerza, ya casi",
-      "¡Bravo!",
-      "Aquí tranquilo por ahora",
-      "Jaja, así mismo es"
+      "Que bueno\nAquí con mil contratos",
+      "Jajajaja\nÁnimo con eso",
+      "Epa\nQue bueno",
+      "Seee",
+      "Umju",
+      "Awwwww\nCosita",
+      "Es lo más natural",
+      "Pero trabajamos igual",
+      "La mayoría trabaja 🫩",
+      "Cambia toda la jugada eso",
+      "Aquí no\nAquí corriendo con el gerente",
+      "Jajajaja\nTe entiendo",
+      "Yesss",
+      "Ah no no mentira\nJajajaja",
+      "Aquí peleando con la impresora\nMish"
     ],
     angeles: [
-      "¡Qué bueno! Aquí con mil llamadas",
-      "Jaja, ánimo con eso",
-      "¡Epa, qué bien!",
-      "Aquí con la cola llena",
-      "Tranquilo, que sale",
-      "¡Felicidades!",
-      "Aquí entre llamada y llamada",
-      "Jaja, te entiendo",
-      "Bien, aquí cerrando tickets",
-      "¡Qué chévere!",
-      "Paciencia, ya casi",
-      "Aquí con el audífono puesto",
-      "¡Bravo!",
-      "Aquí tranquila por ahora",
-      "Jaja, así mismo es"
+      "yo no",
+      "qué bueno ps",
+      "ánimo niña",
+      "aquí con la cola llena",
+      "tranqui, que sale",
+      "felicidades niña",
+      "aquí entre llamada y llamada",
+      "jaja te entiendo",
+      "aquí cerrando tickets ps",
+      "qué chévere niña",
+      "paciencia, ya casi",
+      "aquí con el audífono puesto",
+      "bravo ps",
+      "aquí tranquila por ahora",
+      "así mismo es ps"
     ],
+    /* john: his voice goes here later */
     john: [
       "¡Qué bueno! Aquí lleno de aserrín",
       "Jaja, ánimo con eso",
@@ -3844,8 +3926,8 @@ var PERSONAL = [
 ];
 function isPersonal(inp){ for (var i = 0; i < PERSONAL.length; i++) if (PERSONAL[i].test(inp.str)) return true; return false; }
 var DEFLECT = {
-  doriana:["Mi vida personal la guardo bajo llave, como un expediente sellado. Pregúntame de papeleo o de citas, eso sí.","Eso no lo hablo en el trabajo. Papeleo, citas, archivos: de eso hablo todo el día.","Jaja, buen intento. Mejor de trabajo: ¿quieres saber qué lleva un expediente?","Eso prefiero dejarlo en privado. Pero si quieres tips para ser más organizada, aquí estoy."],
-  angeles:["Lo personal lo dejo fuera de la línea, ¡disculpa! Pregúntame de llamadas, tickets o cómo mantener la calma.","Eso se queda en privado. ¿Te cuento mejor cómo manejo a un cliente molesto?","¡Mejor hablemos de trabajo! Te puedo contar todo sobre tickets y música de espera.","De cosas personales no hablo en el trabajo. Pero pregúntame lo que quieras de atención al cliente."],
+  doriana:["Jajajaja\nEso no\nMejor pregúntame de papeleo o de citas","Aquí no\nDe eso no hablo en el trabajo","Mish, buen intento jajajaja\n¿Te cuento qué lleva un expediente?","Eso lo guardo bajo llave\nComo un expediente sellado"],
+  angeles:["eso no ps niña, lo personal lo dejo fuera de la línea","yo no hablo de eso en el trabajo ps. pregúntame de llamadas o tickets","jaja no niña. mejor te cuento de la música de espera","eso se queda en privado ps. te cuento cómo calmo a un cliente molesto?"],
   john:["Eso lo dejo fuera del taller. Pregúntame de maderas, ensambles o acabados.","Eso es personal, así que paso. ¿Quieres saber la diferencia entre roble y arce?","Mejor quedémonos en el banco de trabajo. Medir, cortar, ensamblar: dale.","De eso no hablo en el trabajo. Pero pregúntame cómo funciona una cola de milano."],
   luis:["Lo personal lo mantengo offline. Pregúntame de páginas web, SEO o velocidad.","Eso se queda en privado. ¿Quieres saber cómo se arma una página de producto?","Mejor hablemos de la web: imágenes, accesibilidad, menús. Soy todo tuyo.","No es tema de trabajo, así que lo salto. Pero pregúntame para qué sirve el texto alternativo."]
 };
@@ -3905,19 +3987,20 @@ var FRIEND = {
   luis:"siempre metido en las páginas web. Audífonos puestos es que está construyendo algo, pero contesta rápido los mensajes"
 };
 function howReply(p){
-  var n = p.needs, m = p.mood.kind, bits = [gender(p, fresh(p, OPEN[m]))], why = p.moodWhy, low = lowest(p), t = clock.elapsedTime;
+  var n = p.needs, m = p.mood.kind, bits = [gender(p, fresh(p, V(p, "open", OPEN)[m]))], why = p.moodWhy, low = lowest(p), t = clock.elapsedTime;
   if (p.lastCare && t - p.lastCare.t < 90 && p.lastCare.phrase) { bits.push(fresh(p, ["Gracias otra vez por " + p.lastCare.phrase + ".", "Ese " + p.lastCare.short + " me cayó perfecto."])); why = "alguien tuvo el detalle de traerme " + p.lastCare.phrase; }
-  else if (low && low.v < LOWLINE) { bits.push(fresh(p, NEED_LINES[low.k])); why = { food:"hace rato que no como", water:"hace rato que no tomo nada", energy:"llevo mucho rato sin descanso", mood:"es uno de esos días" }[low.k]; }
+  else if (low && low.v < LOWLINE) { bits.push(fresh(p, V(p, "need", NEED_LINES)[low.k])); why = { food:"hace rato que no como", water:"hace rato que no tomo nada", energy:"llevo mucho rato sin descanso", mood:"es uno de esos días" }[low.k]; }
   else if (p.lastText && p.lastText.from && t - p.lastText.t < 90 && p.mood.v > 0.1) { bits.push("Me acaba de escribir " + p.lastText.from + "."); why = "un mensajito de un amigo siempre ayuda"; }
-  else if (n.focus > 0.75 && (p.typeOn || (p.act && p.act.work)) && p.mood.v >= 0) { bits.push(gender(p, fresh(p, ["Hoy estoy concentrado.","Cabeza abajo, sacando cosas."]))); why = "por fin tengo un rato tranquilo para trabajar"; }
+  else if (n.focus > 0.75 && (p.typeOn || (p.act && p.act.work)) && p.mood.v >= 0) { bits.push(gender(p, fresh(p, V(p, "focused", ["Hoy estoy concentrado.","Cabeza abajo, sacando cosas."])))); why = "por fin tengo un rato tranquilo para trabajar"; }
   else if (why && (m === "stressed" || m === "tired" || m === "excited")) bits.push(cap(why) + ".");
-  if (PROFILE[p.id].traits.chattiness > 0.7 && Math.random() < 0.4) bits.push("¿Y tú?");
-  return { text:bits.join(" "), reason:why || "es ese tipo de día" };
+  if (PROFILE[p.id].traits.chattiness > 0.7 && Math.random() < 0.4) bits.push(fresh(p, V(p, "andYou", ["¿Y tú?"])));
+  if (V(p, "lower", false)) bits = bits.map(function(b){ return b.charAt(0).toLowerCase() + b.slice(1); });
+  return { text:bits.join(V(p, "join", " ")), reason:why || "es ese tipo de día" };
 }
 function grumpy(p){ return p.care.mood < 0.48 || (p.care.food < 0.45 && p.care.water < 0.5); }
 function tone(p, text){
-  if (grumpy(p) && Math.random() < 0.5) return text.split(". ")[0].replace(/\.?$/, ".") + " " + fresh(p, ["Perdón, ando medio gruñón.","Uf, necesito un snack.","No me hagas caso, batería baja."]);
-  if ((p.mood.kind === "great" || p.mood.kind === "excited") && Math.random() < 0.12) return text + " " + fresh(p, PROFILE[p.id].jokes);
+  if (grumpy(p) && Math.random() < 0.5) return text.split(". ")[0].replace(/\.?$/, ".") + " " + fresh(p, V(p, "grumpy", ["Perdón, ando medio gruñón.","Uf, necesito un snack.","No me hagas caso, batería baja."]));
+  if ((p.mood.kind === "great" || p.mood.kind === "excited") && Math.random() < 0.12) return text + V(p, "join", " ") + fresh(p, PROFILE[p.id].jokes);
   return text;
 }
 var FOLLOW = {
@@ -3940,7 +4023,7 @@ function converse(p, raw){
   if (!inp.raw.length) return { text:"¿Mm?", intent:"none" };
   if (p.act && (p.act.n === "nap" || p.act.n === "napStand") && t - p.act.t0 < p.act.dur - 1) {
     p.act.dur = Math.max(1.5, t - p.act.t0 + 1.2);
-    return { text:gender(p, fresh(p, ["¿Mm? ¡Ah! Estaba descansando los ojos. ¿Qué pasó?","Zzz... ¿eh? Perdón, siestica express. Ya volví.","Cinco segunditos más... listo, ya estoy despierto. Dime."])), intent:"wake" };
+    return { text:gender(p, fresh(p, V(p, "wake", ["¿Mm? ¡Ah! Estaba descansando los ojos. ¿Qué pasó?","Zzz... ¿eh? Perdón, siestica express. Ya volví.","Cinco segunditos más... listo, ya estoy despierto. Dime."]))), intent:"wake" };
   }
   if (isPersonal(inp)) return { text:fresh(p, DEFLECT[p.id]), intent:"deflect", reason:"me gusta separar el trabajo de lo personal" };
   /* food or drink offered in the chat */
@@ -3984,36 +4067,38 @@ function converse(p, raw){
   if (it.s >= 3 && it.s >= ts.s) topicWins = false;
   if (topicWins) {
     p.lastTopic = { tp:ts.tp, t:t };
-    var pre = it.id === "greet" ? fresh(p, ["¡Hola! ","¡Epa! ","Ah, hola. "]) : "";
+    var pre = it.id === "greet" ? fresh(p, V(p, "hiPre", ["¡Hola! ","¡Epa! ","Ah, hola. "])) : V(p, "topicPre", null) ? fresh(p, V(p, "topicPre")) : "";
     if (p.id === "luis" && luisDeepWork(p) && Math.random() < 0.5) pre = fresh(p, ["Me quito los audífonos un segundo. ","Va, rapidito. ","¿Mm? Claro. "]) + pre;
-    return { text:pre + tone(p, topicReply(p, ts.tp, "a")), intent:"topic", reason:(ts.tp.why && ts.tp.why[0]) || "" };
+    var ans = tone(p, topicReply(p, ts.tp, "a"));
+    if (/, $/.test(pre)) ans = ans.charAt(0).toLowerCase() + ans.slice(1);
+    return { text:pre + ans, intent:"topic", reason:(ts.tp.why && ts.tp.why[0]) || "" };
   }
   var r, low = lowest(p), c = p.care;
   switch (it.id) {
     case "greet":
-      var gr = fresh(p, [p.mood.v > 0.3 ? "¡Epa! Qué bueno verte." : "Hola.", "¡Hola! " + (p.mood.v > 0 ? "¿Qué más?" : "¿Qué necesitas?"), "Hola. " + doingNow(p) + ", pero dime."]);
-      if (low && low.v < 0.5 && Math.random() < 0.6) gr += " " + gender(p, fresh(p, ASK_FOR[low.k]));
+      var gr = fresh(p, V(p, "greet", [p.mood.v > 0.3 ? "¡Epa! Qué bueno verte." : "Hola.", "¡Hola! " + (p.mood.v > 0 ? "¿Qué más?" : "¿Qué necesitas?"), "Hola. " + doingNow(p) + ", pero dime."]));
+      if (low && low.v < 0.5 && Math.random() < 0.6) gr += V(p, "join", " ") + gender(p, fresh(p, V(p, "askFor", ASK_FOR)[low.k]));
       return { text:gr, intent:"greet" };
-    case "bye": return { text:fresh(p, ["¡Chao!","¡Nos vemos! Vuelve cuando quieras.","¡Hasta luego!","¡Hablamos!"]), intent:"bye" };
-    case "thanks": return { text:fresh(p, ["¡Con gusto!","Para eso estamos.","¡De nada!","Tranquilo, cuando quieras."]), intent:"thanks" };
+    case "bye": return { text:fresh(p, V(p, "bye", ["¡Chao!","¡Nos vemos! Vuelve cuando quieras.","¡Hasta luego!","¡Hablamos!"])), intent:"bye" };
+    case "thanks": return { text:fresh(p, V(p, "thanks", ["¡Con gusto!","Para eso estamos.","¡De nada!","Tranquilo, cuando quieras."])), intent:"thanks" };
     case "how": case "mood": r = howReply(p); return { text:r.text, intent:"how", reason:r.reason };
     case "day": r = howReply(p); return { text:r.text + " " + fresh(p, ["Movido, pero del bueno.","Ya llevo bastante adelantado.","Ahí vamos, una cosa a la vez."]), intent:"day", reason:r.reason };
     case "doing": return { text:doingNow(p) + ".", intent:"doing", reason:"es lo primero en mi lista ahorita" };
     case "busy":
       if (luisDeepWork(p) || (p.act && p.act.n === "call")) return { text:fresh(p, ["Un poquito, " + doingNow(p).toLowerCase() + ". Pero dime.","Algo. ¿Rapidito?"]), intent:"busy", reason:"estoy en medio de algo: " + doingNow(p).toLowerCase() };
       if (p.mood.kind === "stressed") return { text:"La verdad, sí. Pero dime.", intent:"busy", reason:p.moodWhy || "es un día movido" };
-      return { text:fresh(p, ["No mucho, ¿qué pasó?","Tengo un minuto. Dale.","¿Para ti? Nunca."]), intent:"busy", reason:"por fin un momento tranquilo" };
+      return { text:fresh(p, V(p, "free", ["No mucho, ¿qué pasó?","Tengo un minuto. Dale.","¿Para ti? Nunca."])), intent:"busy", reason:"por fin un momento tranquilo" };
     case "hungry":
-      if (c.food < LOWLINE) return { text:fresh(p, ["¡Sí! Tengo un hambre... ¿tienes algo?","La verdad, mucha. ¿Traes algo?","Comería algo, seguro. Un sándwich sería lo máximo."]), intent:"hungry", reason:"hace rato que no como" };
-      if (c.food < 0.75) return { text:fresh(p, ["Un poquito, pero estoy bien.","Picaría algo, pero sin apuro.","Ya casi. Pregúntame en una hora."]), intent:"hungry", reason:"hace un rato que comí" };
-      return { text:fresh(p, ["No, estoy bien, ¡gracias!","Acabo de comer, estoy full.","Ahorita no, gracias por preguntar."]), intent:"hungry", reason:"comí hace poco" };
+      if (c.food < LOWLINE) return { text:fresh(p, V(p, "hungryLow", ["¡Sí! Tengo un hambre... ¿tienes algo?","La verdad, mucha. ¿Traes algo?","Comería algo, seguro. Un sándwich sería lo máximo."])), intent:"hungry", reason:"hace rato que no como" };
+      if (c.food < 0.75) return { text:fresh(p, V(p, "hungryMid", ["Un poquito, pero estoy bien.","Picaría algo, pero sin apuro.","Ya casi. Pregúntame en una hora."])), intent:"hungry", reason:"hace un rato que comí" };
+      return { text:fresh(p, V(p, "hungryNo", ["No, estoy bien, ¡gracias!","Acabo de comer, estoy full.","Ahorita no, gracias por preguntar."])), intent:"hungry", reason:"comí hace poco" };
     case "thirsty":
-      if (c.water < LOWLINE) return { text:gender(p, fresh(p, ["Sí, por favor, estoy seco.","Qué sed. Lo que sea me sirve.","La verdad, algo de tomar me caería perfecto."])), intent:"thirsty", reason:"hace rato que no tomo nada" };
+      if (c.water < LOWLINE) return { text:gender(p, fresh(p, V(p, "thirstyLow", ["Sí, por favor, estoy seco.","Qué sed. Lo que sea me sirve.","La verdad, algo de tomar me caería perfecto."]))), intent:"thirsty", reason:"hace rato que no tomo nada" };
       if (p.needs.coffee > 0.5 && p.state === "sit" && !busyAct(p)) { p.needs.coffee = 0; startAct(p, "sip", t + 1.5, 4, null, { item:DRINK_OF[p.id], label:"Tomándose un " + DRINK_ES[DRINK_OF[p.id]] }); bumpCare(c, "water", 0.08); netCare(p); return { text:fresh(p, ["Me leíste la mente. Ya me sirvo un " + DRINK_ES[DRINK_OF[p.id]] + ".","¡Sí! Me tomo un " + DRINK_ES[DRINK_OF[p.id]] + " ya mismo."]), intent:"thirsty", reason:"hace rato que no me tomo uno" }; }
-      return { text:fresh(p, ["Por ahora bien, ¡gracias!","Acabo de tomar algo, pero gracias.","Quizás más tarde, gracias."]), intent:"thirsty", reason:"tomé algo hace poco" };
+      return { text:fresh(p, V(p, "thirstyNo", ["Por ahora bien, ¡gracias!","Acabo de tomar algo, pero gracias.","Quizás más tarde, gracias."])), intent:"thirsty", reason:"tomé algo hace poco" };
     case "tired":
-      if (c.energy < LOWLINE) return { text:fresh(p, ["La verdad, sí. Un descansito me caería bien.","Un poco. Una siestica no estaría mal.","Ahí voy. Ha sido un día largo."]), intent:"tired", reason:"llevo rato sin descanso" };
-      return { text:fresh(p, ["Para nada, tengo pila para rato.","¡Estoy bien! Mucha energía hoy.","Nada, estoy en racha."]), intent:"tired", reason:"descansé hace poco" };
+      if (c.energy < LOWLINE) return { text:fresh(p, V(p, "tiredLow", ["La verdad, sí. Un descansito me caería bien.","Un poco. Una siestica no estaría mal.","Ahí voy. Ha sido un día largo."])), intent:"tired", reason:"llevo rato sin descanso" };
+      return { text:fresh(p, V(p, "tiredNo", ["Para nada, tengo pila para rato.","¡Estoy bien! Mucha energía hoy.","Nada, estoy en racha."])), intent:"tired", reason:"descansé hace poco" };
     case "where":
       var q = personIn(inp, p);
       if (q === "boss") return { text:fresh(p, ["¿El jefe? En la oficina detrás de esa puerta, seguro en el teléfono.","Detrás de la puerta que dice Gerente. Si está cerrada, está en una llamada."]), intent:"where" };
@@ -4028,7 +4113,7 @@ function converse(p, raw){
     case "like": return { text:fresh(p, ["Sí, de verdad. Lo que más me gusta es " + prof.likes + ".","¡Sí! Hasta los días difíciles. Lo que me fastidia es " + prof.dislikes + ", pero así es el trabajo.","La verdad, sí. Nada como " + prof.likes + "."]), intent:"like", reason:"se me da bien y me gusta ver las cosas bien hechas" };
     case "praise":
       moodShift(p, 0.12, "alguien me dijo que estoy haciendo un buen trabajo"); bumpCare(c, "mood", 0.06); netCare(p); p.smileUntil = t + 4;
-      return { text:fresh(p, ["¡Ay, gracias! Me alegraste el día.","¡Gracias! De verdad, eso significa mucho.","Para, que me lo creo. Bueno, sigue."]), intent:"praise", reason:"da gusto escucharlo" };
+      return { text:fresh(p, V(p, "praise", ["¡Ay, gracias! Me alegraste el día.","¡Gracias! De verdad, eso significa mucho.","Para, que me lo creo. Bueno, sigue."])), intent:"praise", reason:"da gusto escucharlo" };
     case "help": return { text:"¡Pregúntame de mi trabajo!" + (KB[p.id] ? suggestTopics(p) : "") + " O pregúntame cómo estoy, qué estoy haciendo o dónde están los demás.", intent:"help" };
   }
   var fq = personIn(inp, p);
@@ -4046,14 +4131,14 @@ function giveCare(p, kind, item, fromChat, remote){
   if (p.act && (p.act.n === "nap" || p.act.n === "napStand") && kind !== "nap") p.act.dur = t - p.act.t0 + 0.6;
   if (kind === "food") {
     var F = FOODS[item]; label = F.label; phrase = F.art; short = F.short;
-    if (!remote && seenCare(p, "food") > 0.92) line = gender(p, fresh(p, ["¡Gracias, pero estoy lleno! Más tarde quizás.","No me cabe ni un bocado más. ¡Gracias igual!","Qué lindo, pero acabo de comer."]));
+    if (!remote && seenCare(p, "food") > 0.92) line = gender(p, fresh(p, V(p, "full", ["¡Gracias, pero estoy lleno! Más tarde quizás.","No me cabe ni un bocado más. ¡Gracias igual!","Qué lindo, pero acabo de comer."])));
     else {
       bc(c, "food", F.food); bc(c, "water", F.water); bc(c, "energy", F.energy); bc(c, "mood", F.mood); ok = true;
       moodShift(p, 0.1 + F.mood, "alguien me trajo " + F.art);
       startAct(p, "eat", t, 6, null, { item:item, label:"Comiéndose " + F.art });
-      say(p, choose(["¡Qué rico!","¡Gracias!","¡Justo a tiempo!"]), 2.6);
-      line = c.food < LOWLINE ? fresh(p, ["¡Gracias! Pero todavía tengo hambre.","Eso ayudó. Me comería otro, la verdad.","Mmm. Sigo con hambre... ¡pero mejor!"])
-        : fresh(p, ["¡Gracias por " + F.art + "! Justo lo que necesitaba.","¡Ay, " + F.art + "! Eres lo máximo.","Perfecto, ya me estaba dando hambre. ¡Gracias!"]);
+      say(p, choose(V(p, "yum", ["¡Qué rico!","¡Gracias!","¡Justo a tiempo!"])), 2.6);
+      line = c.food < LOWLINE ? fresh(p, V(p, "stillHungry", ["¡Gracias! Pero todavía tengo hambre.","Eso ayudó. Me comería otro, la verdad.","Mmm. Sigo con hambre... ¡pero mejor!"]))
+        : fresh(p, V(p, "foodThanks", ["¡Gracias por " + F.art + "! Justo lo que necesitaba.","¡Ay, " + F.art + "! Eres lo máximo.","Perfecto, ya me estaba dando hambre. ¡Gracias!"]).map(function(s){ return s.replace("{art}", F.art); }));
     }
   } else if (kind === "drink") {
     var D = DRINKS[item]; label = D.label; phrase = D.art; short = D.short;
@@ -4063,9 +4148,9 @@ function giveCare(p, kind, item, fromChat, remote){
       moodShift(p, 0.08 + D.mood, "alguien me trajo " + D.art);
       p.needs.coffee = item === "coffee" || item === "tea" ? 0 : p.needs.coffee;
       startAct(p, "sip", t, 5, null, { item:item, label:"Tomándose " + D.art });
-      say(p, choose(["¡Gracias!","Ahh, perfecto.","¡Justo lo que necesitaba!"]), 2.4);
-      line = item === "coffee" && p.id === "angeles" ? "¡Café! Gracias. Normalmente tomo té por la voz, pero hoy no le digo que no."
-        : fresh(p, ["¡Gracias por " + D.art + "!","¡Ay, " + D.art + "! Qué detalle.","Perfecto, ya tenía sed. ¡Gracias!"]);
+      say(p, choose(V(p, "sipSay", ["¡Gracias!","Ahh, perfecto.","¡Justo lo que necesitaba!"])), 2.4);
+      line = item === "coffee" && p.id === "angeles" ? V(p, "coffee", "¡Café! Gracias. Normalmente tomo té por la voz, pero hoy no le digo que no.")
+        : fresh(p, V(p, "drinkThanks", ["¡Gracias por " + D.art + "!","¡Ay, " + D.art + "! Qué detalle.","Perfecto, ya tenía sed. ¡Gracias!"]).map(function(s){ return s.replace("{art}", D.art); }));
     }
   } else if (kind === "nap") {
     label = "descanso";
@@ -4075,20 +4160,20 @@ function giveCare(p, kind, item, fromChat, remote){
       startAct(p, p.stand ? "napStand" : "nap", t, 12, null, { label:p.stand ? "Descansando los ojos un minuto" : "Tomando una siestica" });
       bc(c, "energy", 0.3); bc(c, "mood", 0.05); p.needs.energy = 1; ok = true;
       say(p, "Zzz...", 11);
-      line = fresh(p, ["¿Un descanso? No te digo que no. Despiértame en un minuto.","Ay, una siestica suena divino. Ya vuelvo.","Solo voy a descansar los ojos. Cinco minutos."]);
+      line = fresh(p, V(p, "nap", ["¿Un descanso? No te digo que no. Despiértame en un minuto.","Ay, una siestica suena divino. Ya vuelvo.","Solo voy a descansar los ojos. Cinco minutos."]));
     }
   } else if (kind === "cheer") {
     label = "ánimo";
     bc(c, "mood", 0.28); moodShift(p, 0.3, "alguien vino a darme ánimo"); ok = true;
     startAct(p, "celebrate", t, 3.4, null, { label:"Feliz de la vida" });
-    say(p, choose(["¡Me alegraste el día!","¡Aww, gracias!","¡El mejor piropo!"]), 3);
-    line = fresh(p, ["¡Me alegraste el día, gracias!","Aww. Listo, ya estoy sonriendo.","Qué lindo. ¡A trabajar con una sonrisa!"]);
+    say(p, choose(V(p, "cheerSay", ["¡Me alegraste el día!","¡Aww, gracias!","¡El mejor piropo!"])), 3);
+    line = fresh(p, V(p, "cheer", ["¡Me alegraste el día, gracias!","Aww. Listo, ya estoy sonriendo.","Qué lindo. ¡A trabajar con una sonrisa!"]));
   } else if (kind === "work") {
     label = "concentración";
     p.act = null; p.needs.focus = 1; ok = true;
     if (!p.trip) startWork(p, t);
-    say(p, choose(["¡A darle!","¡Voy!","Modo concentración."]), 2.2);
-    line = gender(p, fresh(p, ["Listo, a darle. ¡Gracias por el espacio!","Cabeza abajo. Ahora sí saco todo.","Modo concentración activado."]));
+    say(p, choose(V(p, "workSay", ["¡A darle!","¡Voy!","Modo concentración."])), 2.2);
+    line = gender(p, fresh(p, V(p, "work", ["Listo, a darle. ¡Gracias por el espacio!","Cabeza abajo. Ahora sí saco todo.","Modo concentración activado."])));
   }
   if (ok && (kind === "food" || kind === "drink")) delete FAKE[kind === "food" ? "food" : "water"][p.id];
   p.lastCare = { kind:kind, item:item, label:label, phrase:phrase, short:short, t:t };
@@ -4096,7 +4181,7 @@ function giveCare(p, kind, item, fromChat, remote){
   if (remote) { netToast(p, kind, phrase); if (focus === p) renderCare(p); return { text:line, intent:"care", reason:"" }; }
   saveCare();
   if (ok) netAction(p, kind, item);
-  if (!fromChat) { p.log.push({ who:"them", text:line }); if (focus === p) { renderLog(p); renderCare(p); } }
+  if (!fromChat) { burst(line).forEach(function(s){ p.log.push({ who:"them", text:s }); }); if (focus === p) { renderLog(p); renderCare(p); } }
   else if (focus === p) renderCare(p);
   return { text:line, intent:"care", reason:"" };
 }
@@ -4215,7 +4300,7 @@ function ask(p, text){
   }
   setTimeout(function(){
     var i = p.log.indexOf(typing);
-    if (i >= 0) p.log.splice(i, 1, { who:"them", text:reply });
+    if (i >= 0) p.log.splice.apply(p.log, [i, 1].concat(burst(reply).map(function(s){ return { who:"them", text:s }; })));
     if (p.log.length > 60) p.log.splice(0, p.log.length - 60);
     if (focus === p) { renderLog(p); renderSugg(p); }
   }, delay);
@@ -4243,7 +4328,7 @@ function focusOn(p){
   renderCare(p);
   /* if they need something, they say so when you open the card */
   var low = lowest(p), t = clock.elapsedTime;
-  if (low && low.v < 0.5 && (!p.askedAt || t - p.askedAt > 90)) { p.askedAt = t; p.log.push({ who:"them", text:fresh(p, ASK_FOR[low.k]) }); }
+  if (low && low.v < 0.5 && (!p.askedAt || t - p.askedAt > 90)) { p.askedAt = t; burst(fresh(p, V(p, "askFor", ASK_FOR)[low.k])).forEach(function(s){ p.log.push({ who:"them", text:s }); }); }
   renderLog(p); renderSugg(p);
   card.hidden = false;
   layoutTile();
@@ -4532,8 +4617,8 @@ try { netStart(); } catch (e) {}
 /* ---------- self-talk lines from the Spanish ambient set ---------- */
 function selfLine(p){
   var S = AMB.self[p.id], a = p.act ? p.act.n : (p.typeOn ? "type" : ""), low = lowest(p);
-  if (low && low.v < LOWLINE && Math.random() < 0.5) { var mk = low.k === "food" ? "hungry" : low.k === "water" ? "thirsty" : low.k === "energy" ? "tired" : "stressed"; if (AMB.mood[mk]) return fresh(p, AMB.mood[mk]); }
-  if ((p.mood.kind === "great" || p.mood.kind === "excited") && Math.random() < 0.15) return fresh(p, AMB.mood.great);
+  if (low && low.v < LOWLINE && Math.random() < 0.5) { var mk = low.k === "food" ? "hungry" : low.k === "water" ? "thirsty" : low.k === "energy" ? "tired" : "stressed"; var MD = V(p, "mood", AMB.mood); if (MD[mk]) return fresh(p, MD[mk]); }
+  if ((p.mood.kind === "great" || p.mood.kind === "excited") && Math.random() < 0.15) return fresh(p, V(p, "mood", AMB.mood).great);
   if (S[a] && Math.random() < 0.65) return fresh(p, S[a]);
   return fresh(p, S.any);
 }
@@ -4673,7 +4758,7 @@ function frame(){
     }
     for (i = 0; i < PEOPLE.length; i++) {
       var p = PEOPLE[i];
-      if (p.say && t > p.say.until) p.say = null;
+      if (p.say && t > p.say.until) { if (p.say.rest && p.say.rest.length) { p.say.text = p.say.rest.shift(); p.say.until = t + p.say.each; } else p.say = null; }
       hungerTick(p, t);
       if (p.say && p.act && (p.act.n === "nap" || p.act.n === "napStand") === false && p.say.text === "Zzz...") p.say = null;
       showBubble(p, p.chatLine || (p.say ? p.say.text : null));
