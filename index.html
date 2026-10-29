@@ -92,6 +92,8 @@ button:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 .vtile .vt-n{position:absolute;left:0;right:0;bottom:0;padding:16px 10px 8px;color:#fff;font:600 12px/1.2 var(--f-body);background:linear-gradient(to top,rgba(0,0,0,.6),rgba(0,0,0,0))}
 .ping{position:absolute;left:0;top:0;font-size:20px;line-height:1;pointer-events:none;filter:drop-shadow(0 3px 6px rgba(0,0,0,.25));will-change:transform}
 @media (max-width:640px){ .vtile{width:112px;height:140px;top:auto} .vtile .vt-n{font-size:10px;padding:12px 6px 5px} .vtile .live{left:6px;top:6px} }
+.toast{position:absolute;left:50%;top:14px;transform:translate(-50%,-6px);max-width:calc(100% - 32px);margin:0;padding:8px 14px;border-radius:999px;background:rgba(27,29,34,.82);color:#fff;font-size:13px;pointer-events:none;z-index:4;opacity:0;transition:opacity .3s,transform .3s}
+.toast.on{opacity:1;transform:translate(-50%,0)}
 .hint{position:absolute;right:max(16px, env(safe-area-inset-right, 0px));bottom:max(14px, env(safe-area-inset-bottom, 0px));margin:0;padding:7px 12px;border-radius:999px;background:rgba(27,29,34,.68);color:#fff;font-size:12px;pointer-events:none;z-index:1}
 .vignette{position:absolute;inset:0;pointer-events:none;background:radial-gradient(ellipse at 50% 45%,rgba(0,0,0,0) 62%,rgba(20,24,30,.14) 100%);z-index:0}
 
@@ -219,6 +221,7 @@ button:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
       </form>
     </div>
   </section>
+  <p class="toast" id="toast" role="status" aria-live="polite" hidden></p>
   <p class="hint" id="hint">Arrastra para girar. Toca a alguien para conversar o llevarle algo.</p>
   <div class="vignette" aria-hidden="true"></div>
   <div class="vtile" id="vtile" hidden aria-hidden="true"><span class="live">EN VIVO</span><span class="vt-n" id="vtName"></span></div>
@@ -1530,7 +1533,8 @@ function updateRig(p, t, dt){
   _rq.copy(r.root.quaternion);
   var b = r.b, i, n, d;
   var lowE = 1 - p.care.energy;
-  var slump = clamp(-p.mood.v, 0, 1) * 0.5 + (1 - p.needs.energy) * 0.2 + lowE * 0.25 - clamp(p.mood.v, 0, 1) * 0.1;
+  var wk = p.weak || 0, faint = ease(clamp((wk - 0.55) / 0.45, 0, 1));
+  var slump = clamp(-p.mood.v, 0, 1) * 0.5 + (1 - p.needs.energy) * 0.2 + lowE * 0.25 - clamp(p.mood.v, 0, 1) * 0.1 + wk * 0.75;
   var tempo = 8 + 5 * p.needs.energy + 2 * Math.max(0, p.mood.v);
   if (sit > 0.001) {
     var ty = p.typeAmp || 0;
@@ -1544,10 +1548,17 @@ function updateRig(p, t, dt){
       if (ty > 0.02 && (n === "LeftForeArm" || n === "RightForeArm")) _dir[1] += ty * 0.03 * Math.sin(t * 7 + (n === "LeftForeArm" ? 0 : 2));
       aim(b[n], b[CHILD[n]], _dir, n === "Head" ? sit * 0.6 : sit, _rq);
     }
+    /* almost no food or water: they fold onto the desk, the same pose as the nap */
+    if (faint > 0.001) for (i = 0; i < ORDER.length; i++) { n = ORDER[i]; d = ACTS.nap[n]; if (d) { _dir[0] = d[0]; _dir[1] = d[1]; _dir[2] = d[2]; aim(b[n], b[CHILD[n]], _dir, sit * faint * 0.85, _rq); } }
   }
   if (sit < 0.99) {
     _dir[0] = 0; _dir[1] = 1; _dir[2] = 0.04 + slump * 0.2; aim(b.Spine1, b.Spine2, _dir, (1 - sit) * 0.7, _rq);
-    _dir[2] = 0.1 + slump * 0.28; aim(b.Head, b.HeadTop_End, _dir, (1 - sit) * 0.35, _rq);
+    _dir[2] = 0.1 + slump * 0.28; aim(b.Head, b.HeadTop_End, _dir, (1 - sit) * (0.35 + 0.35 * wk), _rq);
+    /* standing and weak: the arms hang and the head drops further */
+    if (wk > 0.001) {
+      _dir[0] = 0.12; _dir[1] = -1; _dir[2] = 0.18; aim(b.LeftArm, b.LeftForeArm, _dir, (1 - sit) * wk * 0.5, _rq);
+      _dir[0] = -0.12; aim(b.RightArm, b.RightForeArm, _dir, (1 - sit) * wk * 0.5, _rq);
+    }
   }
   var a = p.act, item = null;
   if (a) {
@@ -1695,6 +1706,55 @@ function lowest(p){
   var c = p.care, best = null;
   [["food", c.food], ["water", c.water], ["energy", c.energy], ["mood", c.mood]].forEach(function(q){ if (!best || q[1] < best.v) best = { k:q[0], v:q[1] }; });
   return best;
+}
+/* ---------- hunger and thirst: below the weak line they slouch and complain, near the floor they slump over ----------
+   driven only by the shared food/water values; ?hungry=1 or ?thirsty=1 (or a list like ?hungry=john,luis) fakes it in this view only, never written anywhere */
+var WEAKLINE = 0.5, FAINTLINE = 0.39;
+var FAKE = (function(){
+  var o = { food:{}, water:{} };
+  try {
+    var q = new URLSearchParams(location.search);
+    [["hungry", "food"], ["thirsty", "water"]].forEach(function(m){
+      var v = q.get(m[0]); if (!v) return;
+      PEOPLE.forEach(function(p){ if (v === "1" || v === "all" || v.split(",").indexOf(p.id) >= 0) o[m[1]][p.id] = true; });
+    });
+  } catch (e) {}
+  return o;
+})();
+function seenCare(p, k){ return FAKE[k][p.id] ? Math.min(p.care[k], FLOOR + 0.01) : p.care[k]; }
+function hungerOf(p){ return Math.min(seenCare(p, "food"), seenCare(p, "water")); }
+var COMPLAIN = {
+  food:["Tengo hambre...","¿Nadie me va a dar comida?","Me suena la barriga.","Un sándwich, por favor...","Ya no me concentro del hambre."],
+  water:["Necesito agua...","Tengo la garganta seca.","¿Alguien me trae algo de tomar?","Me muero de sed aquí.","Un vasito de agua, porfa..."],
+  faint:["Me estoy desmayando aquí...","No puedo más...","Ya casi no me quedan fuerzas."]
+};
+function complainLine(p){
+  var k = seenCare(p, "food") <= seenCare(p, "water") ? "food" : "water";
+  var pool = COMPLAIN[k].slice();
+  if (k === "food") pool.push(p.id === "luis" ? "Doriana, ¿me pasas algo de comer?" : "Luis, aliméntame porfa");
+  if ((p.weak || 0) > 0.6) pool = pool.concat(COMPLAIN.faint);
+  return fresh(p, pool);
+}
+/* four times a second: the weakness eases toward its target (falls slowly, recovers fast), and coming back up gets a small thank-you */
+function updateHunger(p, t, nd){
+  var hv = hungerOf(p), tg = clamp((WEAKLINE - hv) / (WEAKLINE - FAINTLINE), 0, 1), w = p.weak || 0;
+  p.weak = w + (tg - w) * Math.min(1, nd * (tg > w ? 0.35 : 1.6));
+  if (hv < LOWLINE) { if (!p.hungry) { p.hungry = true; p.complainAt = t + rand(4, 12); } return; }
+  if (!p.hungry) return;
+  p.hungry = false; p.complainAt = 0;
+  if (p.say && p.say.complaint) p.say = null;
+  if (w > 0.15) p.perkAt = t + 2.6;
+}
+function hungerTick(p, t){
+  if (p.perkAt && t > p.perkAt) {
+    p.perkAt = 0; p.smileUntil = t + 4;
+    say(p, choose(["¡Gracias! Ya me siento mejor.","¡Gracias! Volví a la vida.","¡Ahora sí! Gracias."]), 3);
+  }
+  if (!p.hungry || !p.complainAt || t < p.complainAt) return;
+  var asleep = p.act && (p.act.n === "nap" || p.act.n === "napStand");
+  if (p.say || p.answering || p.chatLine || asleep) { p.complainAt = t + rand(3, 6); return; }
+  p.complainAt = t + rand(20, 40);
+  say(p, gender(p, complainLine(p)), 3.6); p.say.complaint = true;
 }
 var NEED_ICON = { food:"\u{1F96A}", water:"\u{1F4A7}", energy:"\u{1F634}", mood:"☁️" };
 
@@ -1870,7 +1930,8 @@ function updateAgent(p, t, dt){
     decayCare(c, nd);
     p.mood.v += (MOODS[p.mood.base].v + (c.mood - 0.75) * 0.6 - p.mood.v) * nd * 0.003;
     if (Math.random() < nd * 0.2) recomputeMood(p);
-    p.pace = (0.86 + 0.24 * (p.mood.v + 1) / 2 + 0.06 * (n.energy - 0.5)) * (0.9 + 0.1 * c.energy);
+    updateHunger(p, t, nd);
+    p.pace = (0.86 + 0.24 * (p.mood.v + 1) / 2 + 0.06 * (n.energy - 0.5)) * (0.9 + 0.1 * c.energy) * (1 - 0.5 * p.weak);
   }
   if (p.act && p.act.n !== "carry" && t - p.act.t0 > p.act.dur + 0.5) p.act = null;
   if (p.answering && t > p.answering) p.answering = 0;
@@ -1894,7 +1955,7 @@ function updateAgent(p, t, dt){
     }
     if (p.state === "sit") {
       if (!p.stand && t > p.typeNext) { p.typeOn = !p.typeOn; p.typeNext = t + (p.typeOn ? rand(2, 7) : rand(0.8, 3.5)); }
-      p.typeAmp = lerp(p.typeAmp, p.typeOn && !p.act && !p.stand ? 1 : 0, 1 - Math.exp(-dt * 4));
+      p.typeAmp = lerp(p.typeAmp, p.typeOn && !p.act && !p.stand && (p.weak || 0) < 0.7 ? 1 : 0, 1 - Math.exp(-dt * 4));
       smoothTurn(p, p.sitHeading, dt);
       if (p.act && p.act.n === "answer" && !p.stand) swivelTarget = clamp((camYaw(p) + p.swivel) * 0.35, -0.6, 0.6) * bump(t - p.act.t0, 0, p.act.dur, 0.6);
       p.swivel = lerp(p.swivel, swivelTarget, 1 - Math.exp(-dt * 5));
@@ -3948,7 +4009,7 @@ function converse(p, raw){
       return { text:fresh(p, ["No, estoy bien, ¡gracias!","Acabo de comer, estoy full.","Ahorita no, gracias por preguntar."]), intent:"hungry", reason:"comí hace poco" };
     case "thirsty":
       if (c.water < LOWLINE) return { text:gender(p, fresh(p, ["Sí, por favor, estoy seco.","Qué sed. Lo que sea me sirve.","La verdad, algo de tomar me caería perfecto."])), intent:"thirsty", reason:"hace rato que no tomo nada" };
-      if (p.needs.coffee > 0.5 && p.state === "sit" && !busyAct(p)) { p.needs.coffee = 0; startAct(p, "sip", t + 1.5, 4, null, { item:DRINK_OF[p.id], label:"Tomándose un " + DRINK_ES[DRINK_OF[p.id]] }); bumpCare(c, "water", 0.08); return { text:fresh(p, ["Me leíste la mente. Ya me sirvo un " + DRINK_ES[DRINK_OF[p.id]] + ".","¡Sí! Me tomo un " + DRINK_ES[DRINK_OF[p.id]] + " ya mismo."]), intent:"thirsty", reason:"hace rato que no me tomo uno" }; }
+      if (p.needs.coffee > 0.5 && p.state === "sit" && !busyAct(p)) { p.needs.coffee = 0; startAct(p, "sip", t + 1.5, 4, null, { item:DRINK_OF[p.id], label:"Tomándose un " + DRINK_ES[DRINK_OF[p.id]] }); bumpCare(c, "water", 0.08); netCare(p); return { text:fresh(p, ["Me leíste la mente. Ya me sirvo un " + DRINK_ES[DRINK_OF[p.id]] + ".","¡Sí! Me tomo un " + DRINK_ES[DRINK_OF[p.id]] + " ya mismo."]), intent:"thirsty", reason:"hace rato que no me tomo uno" }; }
       return { text:fresh(p, ["Por ahora bien, ¡gracias!","Acabo de tomar algo, pero gracias.","Quizás más tarde, gracias."]), intent:"thirsty", reason:"tomé algo hace poco" };
     case "tired":
       if (c.energy < LOWLINE) return { text:fresh(p, ["La verdad, sí. Un descansito me caería bien.","Un poco. Una siestica no estaría mal.","Ahí voy. Ha sido un día largo."]), intent:"tired", reason:"llevo rato sin descanso" };
@@ -3966,7 +4027,7 @@ function converse(p, raw){
     case "weekend": return { text:fresh(p, ["Nada del otro mundo, recargar pilas.","Algo lejos del trabajo, ese es el plan.","Todavía no sé. Algo tranquilo, espero."]), intent:"weekend" };
     case "like": return { text:fresh(p, ["Sí, de verdad. Lo que más me gusta es " + prof.likes + ".","¡Sí! Hasta los días difíciles. Lo que me fastidia es " + prof.dislikes + ", pero así es el trabajo.","La verdad, sí. Nada como " + prof.likes + "."]), intent:"like", reason:"se me da bien y me gusta ver las cosas bien hechas" };
     case "praise":
-      moodShift(p, 0.12, "alguien me dijo que estoy haciendo un buen trabajo"); bumpCare(c, "mood", 0.06); p.smileUntil = t + 4;
+      moodShift(p, 0.12, "alguien me dijo que estoy haciendo un buen trabajo"); bumpCare(c, "mood", 0.06); netCare(p); p.smileUntil = t + 4;
       return { text:fresh(p, ["¡Ay, gracias! Me alegraste el día.","¡Gracias! De verdad, eso significa mucho.","Para, que me lo creo. Bueno, sigue."]), intent:"praise", reason:"da gusto escucharlo" };
     case "help": return { text:"¡Pregúntame de mi trabajo!" + (KB[p.id] ? suggestTopics(p) : "") + " O pregúntame cómo estoy, qué estoy haciendo o dónde están los demás.", intent:"help" };
   }
@@ -3978,14 +4039,16 @@ function converse(p, raw){
 }
 
 /* ---------- care actions from the card or the chat ---------- */
-function giveCare(p, kind, item, fromChat){
-  var t = clock.elapsedTime, c = p.care, line, label, phrase = "", short = "";
+/* remote: the same action arrived from someone else's screen, so it only plays the reaction; the care comes through the shared state */
+function giveCare(p, kind, item, fromChat, remote){
+  var t = clock.elapsedTime, c = p.care, line, label, phrase = "", short = "", ok = false;
+  var bc = remote ? function(){} : bumpCare;
   if (p.act && (p.act.n === "nap" || p.act.n === "napStand") && kind !== "nap") p.act.dur = t - p.act.t0 + 0.6;
   if (kind === "food") {
     var F = FOODS[item]; label = F.label; phrase = F.art; short = F.short;
-    if (c.food > 0.92) line = gender(p, fresh(p, ["¡Gracias, pero estoy lleno! Más tarde quizás.","No me cabe ni un bocado más. ¡Gracias igual!","Qué lindo, pero acabo de comer."]));
+    if (!remote && seenCare(p, "food") > 0.92) line = gender(p, fresh(p, ["¡Gracias, pero estoy lleno! Más tarde quizás.","No me cabe ni un bocado más. ¡Gracias igual!","Qué lindo, pero acabo de comer."]));
     else {
-      bumpCare(c, "food", F.food); bumpCare(c, "water", F.water); bumpCare(c, "energy", F.energy); bumpCare(c, "mood", F.mood);
+      bc(c, "food", F.food); bc(c, "water", F.water); bc(c, "energy", F.energy); bc(c, "mood", F.mood); ok = true;
       moodShift(p, 0.1 + F.mood, "alguien me trajo " + F.art);
       startAct(p, "eat", t, 6, null, { item:item, label:"Comiéndose " + F.art });
       say(p, choose(["¡Qué rico!","¡Gracias!","¡Justo a tiempo!"]), 2.6);
@@ -3994,9 +4057,9 @@ function giveCare(p, kind, item, fromChat){
     }
   } else if (kind === "drink") {
     var D = DRINKS[item]; label = D.label; phrase = D.art; short = D.short;
-    if (c.water > 0.94 && item === "water") line = fresh(p, ["Estoy bien hidratado, ¡gracias! Más tarde.","Gracias, pero acabo de tomar agua."]);
+    if (!remote && seenCare(p, "water") > 0.94 && item === "water") line = fresh(p, ["Estoy bien hidratado, ¡gracias! Más tarde.","Gracias, pero acabo de tomar agua."]);
     else {
-      bumpCare(c, "water", D.water); bumpCare(c, "energy", D.energy); bumpCare(c, "food", D.food); bumpCare(c, "mood", D.mood);
+      bc(c, "water", D.water); bc(c, "energy", D.energy); bc(c, "food", D.food); bc(c, "mood", D.mood); ok = true;
       moodShift(p, 0.08 + D.mood, "alguien me trajo " + D.art);
       p.needs.coffee = item === "coffee" || item === "tea" ? 0 : p.needs.coffee;
       startAct(p, "sip", t, 5, null, { item:item, label:"Tomándose " + D.art });
@@ -4006,30 +4069,33 @@ function giveCare(p, kind, item, fromChat){
     }
   } else if (kind === "nap") {
     label = "descanso";
-    if (p.trip) { p.pendingNap = true; line = "Dale, descanso un minuto apenas vuelva a mi " + (p.stand ? "banco." : "escritorio."); }
-    else if (c.energy > 0.9) { line = fresh(p, ["¡Gracias, pero tengo toda la energía ahorita!","¿Una siesta? Estoy más despierto que nunca. Más tarde."]); line = gender(p, line); startAct(p, "stretch", t, 3); }
+    if (p.trip) { p.pendingNap = true; ok = true; line = "Dale, descanso un minuto apenas vuelva a mi " + (p.stand ? "banco." : "escritorio."); }
+    else if (!remote && c.energy > 0.9) { line = fresh(p, ["¡Gracias, pero tengo toda la energía ahorita!","¿Una siesta? Estoy más despierto que nunca. Más tarde."]); line = gender(p, line); startAct(p, "stretch", t, 3); }
     else {
       startAct(p, p.stand ? "napStand" : "nap", t, 12, null, { label:p.stand ? "Descansando los ojos un minuto" : "Tomando una siestica" });
-      bumpCare(c, "energy", 0.3); bumpCare(c, "mood", 0.05); p.needs.energy = 1;
+      bc(c, "energy", 0.3); bc(c, "mood", 0.05); p.needs.energy = 1; ok = true;
       say(p, "Zzz...", 11);
       line = fresh(p, ["¿Un descanso? No te digo que no. Despiértame en un minuto.","Ay, una siestica suena divino. Ya vuelvo.","Solo voy a descansar los ojos. Cinco minutos."]);
     }
   } else if (kind === "cheer") {
     label = "ánimo";
-    bumpCare(c, "mood", 0.28); moodShift(p, 0.3, "alguien vino a darme ánimo");
+    bc(c, "mood", 0.28); moodShift(p, 0.3, "alguien vino a darme ánimo"); ok = true;
     startAct(p, "celebrate", t, 3.4, null, { label:"Feliz de la vida" });
     say(p, choose(["¡Me alegraste el día!","¡Aww, gracias!","¡El mejor piropo!"]), 3);
     line = fresh(p, ["¡Me alegraste el día, gracias!","Aww. Listo, ya estoy sonriendo.","Qué lindo. ¡A trabajar con una sonrisa!"]);
   } else if (kind === "work") {
     label = "concentración";
-    p.act = null; p.needs.focus = 1;
+    p.act = null; p.needs.focus = 1; ok = true;
     if (!p.trip) startWork(p, t);
     say(p, choose(["¡A darle!","¡Voy!","Modo concentración."]), 2.2);
     line = gender(p, fresh(p, ["Listo, a darle. ¡Gracias por el espacio!","Cabeza abajo. Ahora sí saco todo.","Modo concentración activado."]));
   }
+  if (ok && (kind === "food" || kind === "drink")) delete FAKE[kind === "food" ? "food" : "water"][p.id];
   p.lastCare = { kind:kind, item:item, label:label, phrase:phrase, short:short, t:t };
   if (kind !== "nap" && kind !== "work") p.smileUntil = t + 4;
+  if (remote) { netToast(p, kind, phrase); if (focus === p) renderCare(p); return { text:line, intent:"care", reason:"" }; }
   saveCare();
+  if (ok) netAction(p, kind, item);
   if (!fromChat) { p.log.push({ who:"them", text:line }); if (focus === p) { renderLog(p); renderCare(p); } }
   else if (focus === p) renderCare(p);
   return { text:line, intent:"care", reason:"" };
@@ -4297,12 +4363,171 @@ function focusFromHash(){ var m = /^#p-([a-z]+)$/.exec(location.hash || ""); if 
 var snapCam = 0;
 window.addEventListener("hashchange", focusFromHash);
 focusFromHash();
-window.addEventListener("pagehide", saveCare);
+window.addEventListener("pagehide", function(){ saveCare(); clearTimeout(NET.timer); netFlush(); });
 var running = true;
 document.addEventListener("visibilitychange", function(){
   if (document.hidden) { running = false; saveCare(); }
   else if (!running) { running = true; clock.getDelta(); requestAnimationFrame(frame); }
 });
+
+/* ---------- shared office: one care state for everybody, live through Firebase ----------
+   care lives at office/care/<id>, office/t is the time of the last write, office/events is a create-only feed of actions.
+   localStorage stays as the cache, so with no network the page works exactly as before. */
+var NET = { db:"https://friends-workspaces-default-rtdb.firebaseio.com/office", me:Math.random().toString(36).slice(2, 8),
+  on:false, dirty:{}, timer:0, checkAt:Date.now() + 20000, streams:{}, seen:{}, snapAt:0 };
+var PUSH_CHARS = "-0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ_abcdefghijklmnopqrstuvwxyz";
+function netReq(path, method, body){
+  var o = { method:method || "GET", cache:"no-store", keepalive:!!method && method !== "GET" };
+  if (body !== undefined) { o.body = JSON.stringify(body); o.headers = { "Content-Type":"application/json" }; }
+  return fetch(NET.db + path + ".json", o).then(function(r){ if (!r.ok) throw new Error("HTTP " + r.status); return r.json(); });
+}
+function careOut(c){ return { food:+c.food.toFixed(3), water:+c.water.toFixed(3), energy:+c.energy.toFixed(3), mood:+c.mood.toFixed(3) }; }
+function careIn(s){
+  if (!s || typeof s !== "object") return null;
+  var o = {}, all = true;
+  ["food", "water", "energy", "mood"].forEach(function(k){ var v = s[k]; if (typeof v === "number" && isFinite(v)) o[k] = clamp(v, FLOOR, 1); else all = false; });
+  return all ? o : null;
+}
+/* a user action: that person is written within ~300 ms, together with office/t */
+function netCare(p){
+  NET.dirty[p.id] = true; p.careTo = null;
+  clearTimeout(NET.timer);
+  NET.timer = setTimeout(netFlush, 300);
+}
+function netFlush(){
+  if (!NET.on) return;
+  var ids = Object.keys(NET.dirty); if (!ids.length) return;
+  NET.dirty = {};
+  Promise.all(ids.map(function(id){ return netReq("/care/" + id, "PUT", careOut(BY[id].care)); }))
+    .then(function(){ return netReq("/t", "PUT", Date.now()); })
+    .catch(function(){ ids.forEach(function(id){ NET.dirty[id] = true; }); });
+}
+function netAction(p, kind, item){
+  netCare(p);
+  if (!NET.on) return;
+  var act = (kind + (item ? ":" + item : "") + "@" + NET.me).slice(0, 30);
+  netReq("/events", "POST", { who:p.id, act:act, t:Date.now() }).then(function(r){ if (r && r.name) NET.seen[r.name] = 1; }).catch(function(){});
+}
+/* remote care eases in over about a second instead of jumping; a person with an unsent local change keeps it */
+function netApply(id, s, snap){
+  var p = BY[id], v = careIn(s);
+  if (!p || !v || NET.dirty[id]) return;
+  if (snap) { p.care.food = v.food; p.care.water = v.water; p.care.energy = v.energy; p.care.mood = v.mood; p.careTo = null; }
+  else p.careTo = v;
+}
+function netEase(){
+  PEOPLE.forEach(function(p){
+    var to = p.careTo; if (!to) return;
+    var done = true;
+    ["food", "water", "energy", "mood"].forEach(function(k){ var d = to[k] - p.care[k]; if (Math.abs(d) > 0.002) { p.care[k] += d * 0.3; done = false; } else p.care[k] = to[k]; });
+    if (done) p.careTo = null;
+  });
+}
+/* whole snapshot (first load or reconnect): decayed for the time since office/t; anyone missing (first run ever) is seeded from here */
+function netLoad(first){
+  var at = NET.snapAt = Date.now();
+  return Promise.all([netReq("/care"), netReq("/t")]).then(function(r){
+    if (at !== NET.snapAt) return;
+    var care = r[0] || {}, t = typeof r[1] === "number" ? r[1] : 0;
+    var sec = t ? clamp((Date.now() - t) / 1000, 0, 12 * 3600) : 0;
+    NET.on = true;
+    PEOPLE.forEach(function(p){
+      var v = careIn(care[p.id]);
+      if (!v) { NET.dirty[p.id] = true; return; }
+      if (p.netAt > at) return;
+      decayCare(v, sec); netApply(p.id, v, first);
+    });
+    saveCare(); netFlush();
+  });
+}
+function netStream(name, mk, onMsg){
+  var s = NET.streams[name] || (NET.streams[name] = { wait:2, es:null, live:false, timer:0 });
+  if (s.es) s.es.close();
+  var es;
+  try { es = new EventSource(mk()); } catch (e) { es = null; }
+  s.es = es; s.live = false;
+  function retry(){
+    if (s.es !== es) return;
+    if (es) es.close();
+    s.es = null; clearTimeout(s.timer);
+    s.timer = setTimeout(function(){ netStream(name, mk, onMsg); }, s.wait * 1000 * (0.8 + Math.random() * 0.4));
+    s.wait = Math.min(120, s.wait * 2);
+  }
+  if (!es) { retry(); return; }
+  function msg(e){
+    var m; try { m = JSON.parse(e.data); } catch (x) { return; }
+    if (!m || typeof m.path !== "string") return;
+    s.wait = 2;
+    var initial = !s.live && e.type === "put" && m.path === "/"; s.live = true;
+    try { onMsg(e.type, m.path, m.data, initial); } catch (x) { try { console.warn("[ow] net", x); } catch (y) {} }
+  }
+  es.addEventListener("put", msg); es.addEventListener("patch", msg);
+  es.addEventListener("cancel", retry); es.addEventListener("auth_revoked", retry);
+  /* while CONNECTING the browser retries by itself; a CLOSED stream is ours to reopen. After any reconnect the first message is the full snapshot again */
+  es.onerror = function(){ s.live = false; if (es.readyState === 2) retry(); };
+}
+function onCareMsg(type, path, data, initial){
+  var parts = path.split("/").filter(Boolean);
+  if (!parts.length) {
+    /* a full snapshot carries no time, so it is fetched again with office/t to decay it; the very first one duplicates the load at startup */
+    if (type === "put") { var sc = NET.streams.care; if (!(initial && NET.on && !sc.loaded)) netLoad(false).catch(function(){}); sc.loaded = true; return; }
+    if (data && typeof data === "object") Object.keys(data).forEach(function(id){ var p = BY[id]; if (p) p.netAt = Date.now(); netApply(id, data[id]); });
+    return;
+  }
+  var p = BY[parts[0]]; if (!p) return;
+  p.netAt = Date.now();
+  if (parts.length === 1) { netApply(p.id, data); return; }
+  if (parts.length === 2) { var v = careOut(p.careTo || p.care); v[parts[1]] = data; netApply(p.id, v); }
+}
+function onEventMsg(type, path, data, initial){
+  /* the first message is history: only what arrives after it is live */
+  if (initial || path === "/") return;
+  var key = path.split("/").filter(Boolean)[0];
+  if (!key || NET.seen[key]) return;
+  NET.seen[key] = 1;
+  if (!data || typeof data.act !== "string" || !BY[data.who]) return;
+  var m = /^([a-z]+)(?::([a-z]+))?@([a-z0-9]+)$/.exec(data.act);
+  if (!m || m[3] === NET.me) return;
+  var kind = m[1], item = m[2] || null;
+  if (["food", "drink", "nap", "cheer", "work"].indexOf(kind) < 0) return;
+  if ((kind === "food" && !FOODS[item]) || (kind === "drink" && !DRINKS[item])) return;
+  giveCare(BY[data.who], kind, item, false, true);
+}
+/* push keys start with the creation time, so the feed can begin about a minute back without downloading its whole history */
+function pushKey(ms){ var k = ""; for (var i = 0; i < 8; i++) { k = PUSH_CHARS.charAt(ms % 64) + k; ms = Math.floor(ms / 64); } return k; }
+function eventsUrl(){ return NET.db + "/events.json?orderBy=" + encodeURIComponent('"$key"') + "&startAt=" + encodeURIComponent('"' + pushKey(Date.now() - 60000) + '"'); }
+/* the background decay is written at most once a minute, and only if nobody else wrote in that minute */
+function netTick(){
+  netEase();
+  var now = Date.now();
+  if (!NET.on || now < NET.checkAt) return;
+  NET.checkAt = now + 60000 + Math.random() * 15000;
+  if (Object.keys(NET.dirty).length) netFlush();
+  netReq("/t").then(function(t){
+    if (typeof t === "number" && Date.now() - t < 60000) return;
+    PEOPLE.forEach(function(p){ if (!p.careTo) NET.dirty[p.id] = true; });
+    netFlush();
+  }).catch(function(){});
+}
+var toastEl = document.getElementById("toast"), toastTimer = 0;
+function netToast(p, kind, phrase){
+  if (!toastEl) return;
+  var n = p.name;
+  toastEl.textContent = kind === "food" || kind === "drink" ? "Alguien le llevó " + phrase + " a " + n
+    : kind === "nap" ? "Alguien mandó a " + n + " a descansar"
+    : kind === "cheer" ? "Alguien le dio ánimo a " + n
+    : "Alguien dejó que " + n + " se concentre";
+  toastEl.hidden = false; toastEl.classList.add("on");
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(function(){ toastEl.classList.remove("on"); }, 4200);
+}
+function netStart(){
+  if (!window.fetch || !window.EventSource) return;
+  netLoad(true).catch(function(){});
+  netStream("care", function(){ return NET.db + "/care.json"; }, onCareMsg);
+  netStream("events", eventsUrl, onEventMsg);
+}
+try { netStart(); } catch (e) {}
 
 /* ---------- self-talk lines from the Spanish ambient set ---------- */
 function selfLine(p){
@@ -4443,12 +4668,13 @@ function frame(){
       if (!sp.selfAt) sp.selfAt = t + 6 + si * 7 + rand(0, 10);
       if (t > sp.selfAt) {
         sp.selfAt = t + rand(20, 60);
-        if (!sp.say && !sp.answering && !busyAct(sp) && !pings.some(function(pg){ return pg.a === sp; })) say(sp, selfLine(sp), 3);
+        if (!sp.say && !sp.answering && !sp.hungry && !busyAct(sp) && !pings.some(function(pg){ return pg.a === sp; })) say(sp, selfLine(sp), 3);
       }
     }
     for (i = 0; i < PEOPLE.length; i++) {
       var p = PEOPLE[i];
       if (p.say && t > p.say.until) p.say = null;
+      hungerTick(p, t);
       if (p.say && p.act && (p.act.n === "nap" || p.act.n === "napStand") === false && p.say.text === "Zzz...") p.say = null;
       showBubble(p, p.chatLine || (p.say ? p.say.text : null));
       var low = lowest(p), icon = low && low.v < LOWLINE ? NEED_ICON[low.k] : "";
@@ -4458,6 +4684,7 @@ function frame(){
     if (focus) renderCare(focus);
     layoutTile();
     if (t - lastSave > 20) { lastSave = t; saveCare(); }
+    netTick();
   }
 
   if (focus) {
